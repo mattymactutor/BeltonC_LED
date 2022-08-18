@@ -43,8 +43,10 @@ void MainWindow::loadCOMPorts(){
     ui->cmbCOM->addItems(comPORTS);
     firstLoad = false;
 
-    //just automatically try to connect to the first item in the list
-    initArduino(comPORTS[0]);
+    //just automatically try to connect to the first item in the list if there is one
+    if (comPORTS.size() > 0){
+        initArduino(comPORTS[0]);
+    }
 
 
 }
