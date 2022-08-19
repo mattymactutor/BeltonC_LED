@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Run LED Controller
+Comment=This code will run the LED Controller
+Exec=xterm -e bash /home/pi/BeltonC_LED/runLEDController.sh
+Type=Application
+Encoding=UTF-8
