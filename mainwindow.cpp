@@ -11,6 +11,20 @@ QStringList strPositions;
 QStringList comPORTS;
 bool firstLoad = true;
 
+/*
+ * TODO FUTURE
+ * Instead of RGB sliders use a progress bar that fills up with red based on how far you drag it
+ *
+ *
+ * TODO OFFLINE
+ * Figure out how to change border of slider, Start with red selected and take a command from arduino encoder
+ * to scroll through the options, click the encoder to select which would change the background color again
+ * Highlight Color - Black
+ * Selected Color - White border inside of the black (if not we'll pick a different solid color)
+ *  if not highlight gray - select in black
+ *
+ */
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -149,12 +163,69 @@ void MainWindow::on_cmbCOM_currentIndexChanged(int index)
     cout << "trying to connect to Arduino on port : " << port.toStdString() << endl;
     initArduino(port);
 
-
 }
 
 void MainWindow::on_sldRed_valueChanged(int value)
 {
-    QString msg = "r:" + QString::number(value);
+    //turn the value into a valid Arduino command
+    //r:100
+    QString msg = "r:" + QString::number(value);   
     sendArduinoCmd(msg);
+}
+
+
+void MainWindow::on_sldGreen_valueChanged(int value)
+{
+    //turn the value into a valid Arduino command
+    //r:100
+    QString msg = "g:" + QString::number(value);
+    sendArduinoCmd(msg);
+}
+
+
+void MainWindow::on_sldBlue_valueChanged(int value)
+{
+    //turn the value into a valid Arduino command
+    //r:100
+    QString msg = "b:" + QString::number(value);
+    sendArduinoCmd(msg);
+}
+
+
+
+
+void MainWindow::on_sldTungsten_valueChanged(int value)
+{
+    //turn the value into a valid Arduino command
+    //r:100
+    QString msg = "t:" + QString::number(value);
+    sendArduinoCmd(msg);
+}
+
+
+
+
+void MainWindow::on_sldDaylight_valueChanged(int value)
+{
+    //turn the value into a valid Arduino command
+    //r:100
+    QString msg = "d:" + QString::number(value);
+    sendArduinoCmd(msg);
+}
+
+
+void MainWindow::on_sldBrightness_valueChanged(int value)
+{
+    //turn the value into a valid Arduino command
+    //r:100
+    QString msg = "B:" + QString::number(value);
+    sendArduinoCmd(msg);
+}
+
+
+void MainWindow::on_sldRed_sliderPressed()
+{
+    ui->sldRed->setProperty("border", "2px #000000");
+    cout << "Slider Clicked" << endl;
 }
 

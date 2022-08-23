@@ -34,5 +34,11 @@ private slots:
        void on_btnClose_clicked();
        void on_cmbCOM_currentIndexChanged(int index);
        void on_sldRed_valueChanged(int value);
+       void on_sldGreen_valueChanged(int value);
+       void on_sldBlue_valueChanged(int value);
+       void on_sldTungsten_valueChanged(int value);
+       void on_sldDaylight_valueChanged(int value);
+       void on_sldBrightness_valueChanged(int value);
+       void on_sldRed_sliderPressed();
 };
 #endif // MAINWINDOW_H
