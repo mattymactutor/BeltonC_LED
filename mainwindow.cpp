@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "styles.h"
 
 #include <iostream>
 using namespace std;
@@ -11,19 +12,24 @@ QStringList strPositions;
 QStringList comPORTS;
 bool firstLoad = true;
 
+enum ENC_MODE{
+    SCROLL_HIGHLIGHT,
+    CHANGE_VALUE
+};
+
+ENC_MODE encMode = SCROLL_HIGHLIGHT;
+
 /*
  * TODO FUTURE
  * Instead of RGB sliders use a progress bar that fills up with red based on how far you drag it
  *
  *
  * TODO OFFLINE
- * Figure out how to change border of slider, Start with red selected and take a command from arduino encoder
- * to scroll through the options, click the encoder to select which would change the background color again
- * Highlight Color - Black
- * Selected Color - White border inside of the black (if not we'll pick a different solid color)
- *  if not highlight gray - select in black
  *
  */
+
+QList<QFrame*> borders;
+QList<QSlider*> sliders;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -34,11 +40,29 @@ MainWindow::MainWindow(QWidget *parent)
     arduino = new QSerialPort(this);
         serialBuffer = "";
 
-        bool arduino_is_available = false;
+        //bool arduino_is_available = false;
         //adding a blank to the com ports combo box fires off
         //cmbCOM selected index change, that function does a check for first load which tries
         //to connect to the last com port selected
         ui->cmbCOM->addItem("");
+
+   //put borders on list to make highlight/selection easier
+    borders.push_back(ui->brdRed);
+    borders.push_back(ui->brdGreen);
+    borders.push_back(ui->brdBlue);
+    borders.push_back(ui->brdTungsten);
+    borders.push_back(ui->brdDaylight);
+    borders.push_back(ui->brdBrightness);
+
+    //put sliders on list to make changing values easier
+    sliders.push_back(ui->sldRed);
+    sliders.push_back(ui->sldGreen);
+    sliders.push_back(ui->sldBlue);
+    sliders.push_back(ui->sldTungsten);
+    sliders.push_back(ui->sldDaylight);
+    sliders.push_back(ui->sldBrightness);
+
+    highlightSlider(curHighlight);
 
 }
 
@@ -122,11 +146,43 @@ void MainWindow::parseArduinoCmd(string in){
      ui->lblIncMsg->setText(QString::fromStdString(in));
 
 
-     if (in.find("CMD HERE:") != std::string::npos){
+     if (in == "enc"){
 
+         if (encMode == SCROLL_HIGHLIGHT){
+             //if we are scrolling now a click should select whatever is highlighted
+             selectSlider(curHighlight);
+             curSelection = curHighlight;
+             encMode = CHANGE_VALUE;
+         } else if (encMode == CHANGE_VALUE){
+             highlightSlider(curSelection);
+             curHighlight = curSelection;
+             curSelection = -1; //deselect
+             encMode = SCROLL_HIGHLIGHT;
+         }
+
+     } else if (in == "enc+"){
+         if (encMode == SCROLL_HIGHLIGHT){
+             curHighlight++;
+             if (curHighlight > 5) { curHighlight = 0;}
+             highlightSlider(curHighlight);
+         } else if (encMode == CHANGE_VALUE){
+             int curVal = sliders[curSelection]->value();
+             sliders[curSelection]->setValue(curVal + 3);
+         }
+     } else if (in == "enc-"){
+         if (encMode == SCROLL_HIGHLIGHT){
+             curHighlight--;
+             if (curHighlight < 0) { curHighlight = 5;}
+             highlightSlider(curHighlight);
+         } else if (encMode == CHANGE_VALUE){
+             int curVal = sliders[curSelection]->value();
+             sliders[curSelection]->setValue(curVal - 3);
+         }
      }
 
-     this->setCursor(Qt::ArrowCursor);
+     if (this->cursor() != Qt::ArrowCursor){
+        this->setCursor(Qt::ArrowCursor);
+     }
 
 
 }
@@ -171,6 +227,13 @@ void MainWindow::on_sldRed_valueChanged(int value)
     //r:100
     QString msg = "r:" + QString::number(value);   
     sendArduinoCmd(msg);
+
+    if (curSelection != RED){
+       curSelection = RED;
+       curHighlight = RED;
+       highlightSlider(curHighlight);
+       selectSlider(curSelection);
+   }
 }
 
 
@@ -180,6 +243,13 @@ void MainWindow::on_sldGreen_valueChanged(int value)
     //r:100
     QString msg = "g:" + QString::number(value);
     sendArduinoCmd(msg);
+
+    if (curSelection != GREEN){
+       curSelection = GREEN;
+       curHighlight = GREEN;
+       highlightSlider(curHighlight);
+       selectSlider(curSelection);
+   }
 }
 
 
@@ -189,6 +259,12 @@ void MainWindow::on_sldBlue_valueChanged(int value)
     //r:100
     QString msg = "b:" + QString::number(value);
     sendArduinoCmd(msg);
+    if (curSelection != BLUE){
+       curSelection = BLUE;
+       curHighlight = BLUE;
+       highlightSlider(curHighlight);
+       selectSlider(curSelection);
+   }
 }
 
 
@@ -200,6 +276,12 @@ void MainWindow::on_sldTungsten_valueChanged(int value)
     //r:100
     QString msg = "t:" + QString::number(value);
     sendArduinoCmd(msg);
+    if (curSelection != TUNGSTEN){
+       curSelection = TUNGSTEN;
+       curHighlight = TUNGSTEN;
+       highlightSlider(curHighlight);
+       selectSlider(curSelection);
+   }
 }
 
 
@@ -211,6 +293,12 @@ void MainWindow::on_sldDaylight_valueChanged(int value)
     //r:100
     QString msg = "d:" + QString::number(value);
     sendArduinoCmd(msg);
+    if (curSelection != DAYLIGHT){
+       curSelection = DAYLIGHT;
+       curHighlight = DAYLIGHT;
+       highlightSlider(curHighlight);
+       selectSlider(curSelection);
+   }
 }
 
 
@@ -220,12 +308,35 @@ void MainWindow::on_sldBrightness_valueChanged(int value)
     //r:100
     QString msg = "B:" + QString::number(value);
     sendArduinoCmd(msg);
+    if (curSelection != BRIGHTNESS){
+       curSelection = BRIGHTNESS;
+       curHighlight = BRIGHTNESS;
+       highlightSlider(curHighlight);
+       selectSlider(curSelection);
+   }
+
+
 }
 
 
 void MainWindow::on_sldRed_sliderPressed()
 {
-    ui->sldRed->setProperty("border", "2px #000000");
-    cout << "Slider Clicked" << endl;
+
+}
+
+void MainWindow::highlightSlider(int sld){
+    //make them all white
+    for(int i = 0; i < borders.size(); i++){
+        if (i != sld)
+            borders[i]->setStyleSheet(STYLE_WHITE_BORDER);
+    }
+    //now highlight one of them
+    borders[sld]->setStyleSheet(STYLE_HIGHLIGHT_BORDER);
+}
+
+void MainWindow::selectSlider(int sld){
+
+    //slider should already be highlighted so just turn that one selected
+    borders[sld]->setStyleSheet(STYLE_SELECTED_BORDER);
 }
 

@@ -6,6 +6,13 @@
 #include <QSerialPort>
 using namespace std;
 
+#define RED 0
+#define GREEN 1
+#define BLUE 2
+#define TUNGSTEN 3
+#define DAYLIGHT 4
+#define BRIGHTNESS 5
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -24,10 +31,13 @@ private:
     QSerialPort *arduino;
     QByteArray serialData;
     std::string serialBuffer;
+    int curHighlight = 0, curSelection = -1;
     void loadCOMPorts();
     void initArduino(QString port);
     void parseArduinoCmd(string in);
     void sendArduinoCmd(QString in);
+    void highlightSlider(int sld);
+    void selectSlider(int sld);
 
 private slots:
        void readSerial();
