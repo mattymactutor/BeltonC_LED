@@ -6,12 +6,24 @@
 #include <QSerialPort>
 using namespace std;
 
+//RGB SLIDERS
 #define RED 0
 #define GREEN 1
 #define BLUE 2
 #define TUNGSTEN 3
 #define DAYLIGHT 4
 #define BRIGHTNESS 5
+//HSV SLIDERS
+#define HUE 0
+#define SAT 1
+#define VAL 2
+//GRADIENT SLIDERS
+#define STARTHUE 0
+#define STARTSAT 1
+#define STARTVAL 2
+#define ENDHUE 3
+#define ENDSAT 4
+#define ENDVAL 5
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -50,5 +62,15 @@ private slots:
        void on_sldDaylight_valueChanged(int value);
        void on_sldBrightness_valueChanged(int value);
        void on_sldRed_sliderPressed();
+       void on_tabWidget_currentChanged(int index);
+       void on_sldHue_valueChanged(int value);
+       void on_sldSat_valueChanged(int value);
+       void on_sldVal_valueChanged(int value);
+       void on_sldStartHue_valueChanged(int value);
+       void on_sldStartSat_valueChanged(int value);
+       void on_sldStartVal_valueChanged(int value);
+       void on_sldEndHue_valueChanged(int value);
+       void on_sldEndSat_valueChanged(int value);
+       void on_sldEndVal_valueChanged(int value);
 };
 #endif // MAINWINDOW_H
