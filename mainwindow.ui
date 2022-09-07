@@ -1016,7 +1016,7 @@ QSlider::handle:vertical {
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>0</y>
+      <y>10</y>
       <width>131</width>
       <height>31</height>
      </rect>
@@ -1034,7 +1034,7 @@ QSlider::handle:vertical {
     <property name="geometry">
      <rect>
       <x>440</x>
-      <y>30</y>
+      <y>40</y>
       <width>93</width>
       <height>29</height>
      </rect>
