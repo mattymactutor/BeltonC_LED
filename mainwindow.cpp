@@ -446,7 +446,7 @@ void MainWindow::selectSlider(int sld){
 
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
-    qDebug() << "Clicked index " << index;
+    cout << "Clicked index " << index;
     QString msg = "m:" + QString::number(index);
     sendArduinoCmd(msg);
     mode = static_cast<MODE>(index);
