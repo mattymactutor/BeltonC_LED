@@ -3,7 +3,6 @@
 # Setup
 
 ## Install the touchscreen driver
-Insert the SD card with the RPI image into a computer. 
 -Download and install the touch driver
 ```
 git clone https://github.com/goodtft/LCD-show.git
@@ -19,15 +18,10 @@ For rpi 4
 ```
 sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
 ```
-if your application uses QSerialPort you need to run
+if your application uses QSerialPort you need to run. (* THIS PROJECT USES QSerialPort *)
 ```
 sudo apt-get install libqt5serialport5
 sudo apt-get install libqt5serialport5-dev
-```
-
-for rpi3 (untested),if qt-default is not found use the rpi4 code above
-```
-sudo apt-get install qt5-default
 ```
 
 -Clone the repository on RPI4 which will create a DarianB_Vitamin folder and put all of the GIT files in it
