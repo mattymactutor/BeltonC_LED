@@ -6,8 +6,6 @@
 #include <fstream>
 #include <QThread>
 using namespace std;
-#include <QSerialPort>
-#include <QSerialPortInfo>
 #include <QMessageBox>
 #include <unistd.h>
 
@@ -58,15 +56,34 @@ void changeBackgroundOfRGBSlider(QSlider * sld, int R, int G, int B, double perc
 
 QList<QList<QFrame*>> borders;
 QList<QList<QSlider*>> sliders;
+Ui::MainWindow * ui2;
+USB_Comm * arduino;
+
+void parseUSBCmd(string cmd){
+    cout << "USB IN: " << cmd << endl;
+    ui2->lblIncMsg->setText(QString::fromStdString(cmd));
+    if (cmd == "ready"){
+        arduino->setConnected(true);
+    }
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui2 = ui;
 
-    arduino = new QSerialPort(this);
-        serialBuffer = "";
+    arduino = new USB_Comm(("/dev/ttyACM0"));
+    arduino->setParseFunc(parseUSBCmd);
+    usleep(2000*1000);
+
+    while(!arduino->isConnected()){
+        arduino->sendMsg("init");
+        usleep(500*1000);
+    }
+
+
 
         //bool arduino_is_available = false;
         //adding a blank to the com ports combo box fires off
@@ -75,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->cmbCOM->addItem("");
 
 
-      loadDataFromFile();
+     loadDataFromFile();
     //A 2D array of the boarders and sliders is used to highlight certain sliders and also to change their value
      //Each row is a mode, and the column is a list of pointers to the objects on the page for that mode
    //put borders on list to make highlight/selection easier
@@ -95,8 +112,7 @@ MainWindow::MainWindow(QWidget *parent)
     tempSliders.push_back(ui->sldTungsten);
     tempSliders.push_back(ui->sldDaylight);
     tempSliders.push_back(ui->sldBrightness);
-    sliders.push_back(tempSliders);    
-
+    sliders.push_back(tempSliders);
 
     //setup HSV page
     tempBorders.clear();
@@ -109,8 +125,6 @@ MainWindow::MainWindow(QWidget *parent)
     tempSliders.push_back(ui->sldSat);
     tempSliders.push_back(ui->sldVal);
     sliders.push_back(tempSliders);
-
-
 
     //setup gradient page
     tempBorders.clear();
@@ -136,8 +150,6 @@ MainWindow::MainWindow(QWidget *parent)
     //set it to be the first tab that way you have to click to go to another tab with actually sends the mode number
     ui->tabWidget->setCurrentIndex(static_cast<int>(config.mode));
 
-
-   // loadCOMPorts();
 
 }
 
@@ -205,89 +217,8 @@ void MainWindow::loadSliders(){
 
     sendArduinoCmd("lastload");
 }
-void MainWindow::loadCOMPorts(){
-    QString arduino_uno_port_name;
-    //while (ui->cmbCOM->count() > 0){
-    //ui->cmbCOM->removeItem(0);
-    //}
-    //
-    //  For each available serial port
-    foreach(const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts()){
-        comPORTS.append(serialPortInfo.portName());
-    }
 
-    //show current com ports
-    ui->cmbCOM->addItems(comPORTS);
-    firstLoad = false;
-
-
-   if (comPORTS.size() > 0){
-        initArduino(comPORTS[0]);
-    }
-
-}
-
-void MainWindow::initArduino(QString port){
-    arduino->setPortName(port);
-    if (!arduino->open(QSerialPort::ReadWrite)){
-        cout << "Could not open: " << port.toStdString() << endl;
-        QMessageBox::information(this, "Serial Port Error", "Could not open previous com port. Choose a COM port to connect");
-        return;
-    }
-    arduino->setBaudRate(QSerialPort::Baud115200);
-    arduino->setDataBits(QSerialPort::Data8);
-    arduino->setFlowControl(QSerialPort::NoFlowControl);
-    arduino->setParity(QSerialPort::NoParity);
-    arduino->setStopBits(QSerialPort::OneStop);
-    QObject::connect(arduino, SIGNAL(readyRead()), this, SLOT(readSerial()));
-    while (!isArduinoConnected){
-        arduino->waitForReadyRead(500);
-        sendArduinoCmd("init");
-    }
-
-    ui->lblStatus->setText("Connected to Arduino on " + port);
-    cout << "Connected to Arduino on " << port.toStdString() << endl;
-    firstLoad = false;
-}
-
-
-void MainWindow::readSerial()
-{
-    /*
-     * readyRead() doesn't guarantee that the entire message will be received all at once.
-     * The message can arrive split into parts.  Need to buffer the serial data and then parse for the temperature value.
-     *
-     */
-
-    //sometimes you get
-    //<Hell
-    //o58>
-    //which means it doesnt read everything in one go
-
-   serialData = arduino->readAll();
-   cout << "SerialData: ";
-   for(int i = 0; i < serialData.size(); i++){
-    cout << serialData[i];
-   }
-   cout << endl;
-
-   //read through everything you have, start a new message at every <, parse the message as command at every >,
-   //build up the string otherwise
-   for(int i =0; i < serialData.size(); i++){
-       if (serialData[i] == '<'){
-        serialBuffer = "";
-       } else if (serialData[i] == '>'){
-           parseArduinoCmd(serialBuffer);
-       } else {
-           serialBuffer += serialData[i];
-           //cout << (char) serialData[i];
-       }
-   }
-
-
-}
-
-
+/*
 void MainWindow::parseArduinoCmd(string in){
 
      cout << "USB IN: " << in << endl;
@@ -337,15 +268,10 @@ void MainWindow::parseArduinoCmd(string in){
      }
 
 
-}
+}*/
 
 void MainWindow::sendArduinoCmd(QString in){
-
-   in = "<" + in + ">";
-    arduino->write(in.toUtf8());
-    cout << "USB OUT: " << in.toStdString();
-   // while(!arduino->waitForBytesWritten()) {;}
-    //arduino->waitForReadyRead(5);
+  arduino->sendMsg(in.toStdString());
 }
 
 void MainWindow::on_btnClose_clicked()
@@ -362,7 +288,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_cmbCOM_currentIndexChanged(int index)
 {
-    if (firstLoad){
+    /*if (firstLoad){
         loadCOMPorts();
         return;
     }
@@ -373,7 +299,7 @@ void MainWindow::on_cmbCOM_currentIndexChanged(int index)
     //+1 because the first option should be blank
     QString port = comPORTS[index-1];
     cout << "trying to connect to Arduino on port : " << port.toStdString() << endl;
-    initArduino(port);
+    initArduino(port);*/
 
 }
 
@@ -835,4 +761,3 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
     QString msg = "m:" + QString::number(index);
     sendArduinoCmd(msg);
 }
-

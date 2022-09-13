@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <string>
-#include <QSerialPort>
+#include "Serial_Comm_Footpedal.h"
 using namespace std;
 
 //RGB SLIDERS
@@ -41,26 +41,21 @@ public:
     void loadSliders();
 
 private:
-    Ui::MainWindow *ui;
-    QSerialPort *arduino;
-    QByteArray serialData;
+    Ui::MainWindow *ui;    
     std::string serialBuffer;
-    int curHighlight = 0, curSelection = -1;
-    void loadCOMPorts();
-    void initArduino(QString port);
-    void parseArduinoCmd(string in);
-    void sendArduinoCmd(QString in);
+    int curHighlight = 0, curSelection = -1;   
     void highlightSlider(int sld);
     void selectSlider(int sld);
     void loadDataFromFile();
     void saveDataToFile();
     void sendInitData();
+    void sendArduinoCmd(QString in);
 
 
 
 
-private slots:
-       void readSerial();
+
+private slots:     
        void on_btnClose_clicked();
        void on_cmbCOM_currentIndexChanged(int index);
        void on_sldRed_valueChanged(int value);
