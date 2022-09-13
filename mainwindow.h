@@ -29,6 +29,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -36,7 +38,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+    void loadSliders();
 
 private:
     Ui::MainWindow *ui;
@@ -50,6 +52,12 @@ private:
     void sendArduinoCmd(QString in);
     void highlightSlider(int sld);
     void selectSlider(int sld);
+    void loadDataFromFile();
+    void saveDataToFile();
+    void sendInitData();
+
+
+
 
 private slots:
        void readSerial();
@@ -61,8 +69,6 @@ private slots:
        void on_sldTungsten_valueChanged(int value);
        void on_sldDaylight_valueChanged(int value);
        void on_sldBrightness_valueChanged(int value);
-       void on_sldRed_sliderPressed();
-       void on_tabWidget_currentChanged(int index);
        void on_sldHue_valueChanged(int value);
        void on_sldSat_valueChanged(int value);
        void on_sldVal_valueChanged(int value);
@@ -72,5 +78,6 @@ private slots:
        void on_sldEndHue_valueChanged(int value);
        void on_sldEndSat_valueChanged(int value);
        void on_sldEndVal_valueChanged(int value);
+       void on_tabWidget_tabBarClicked(int index);
 };
 #endif // MAINWINDOW_H

@@ -3,6 +3,8 @@
 #include "styles.h"
 
 #include <iostream>
+#include <fstream>
+#include <QThread>
 using namespace std;
 #include <QSerialPort>
 #include <QSerialPortInfo>
@@ -13,6 +15,8 @@ QStringList strPositions;
 QStringList comPORTS;
 bool firstLoad = true;
 bool isArduinoConnected = false;
+const QString FILE_NAME = "config.txt";
+
 
 enum ENC_MODE{
     SCROLL_HIGHLIGHT,
@@ -22,16 +26,27 @@ ENC_MODE encMode = SCROLL_HIGHLIGHT;
 
 #define NUM_MODES 3
 enum MODE{
-    RGB,
-    HSV,
-    GRADIENT
+    RGB = 0,
+    HSV = 1,
+    GRADIENT = 2
 };
 
-MODE mode = RGB;
+
+//make a strucutre to keep track of the settings
+struct CONFIG{
+    int h, s, v;
+    //rgb daylight tungsten brightness
+    int r, g, b, d, t, B;
+    int sh,ss,sv,eh,es,ev;
+    //possibly add ability to change the num of leds? for the gradient.
+    enum MODE mode;
+};
+
+CONFIG config;
 
 /*
  * TODO FUTURE
- * Instead of RGB sliders use a progress bar that fills up with red based on how far you drag it
+
  *
  *
  * TODO OFFLINE
@@ -59,6 +74,8 @@ MainWindow::MainWindow(QWidget *parent)
         //to connect to the last com port selected
         ui->cmbCOM->addItem("");
 
+
+      loadDataFromFile();
     //A 2D array of the boarders and sliders is used to highlight certain sliders and also to change their value
      //Each row is a mode, and the column is a list of pointers to the objects on the page for that mode
    //put borders on list to make highlight/selection easier
@@ -78,17 +95,8 @@ MainWindow::MainWindow(QWidget *parent)
     tempSliders.push_back(ui->sldTungsten);
     tempSliders.push_back(ui->sldDaylight);
     tempSliders.push_back(ui->sldBrightness);
-    sliders.push_back(tempSliders);
-    //move all sliders down and show no background
-    changeBackgroundOfRGBSlider(ui->sldRed, 0,0,0,0.0);
-    changeBackgroundOfRGBSlider(ui->sldGreen,0,0,0,0);
-    changeBackgroundOfRGBSlider(ui->sldBlue, 0,0,0,0);
-    changeBackgroundOfRGBSlider(ui->sldDaylight, 0,0,0,0);
-    changeBackgroundOfRGBSlider(ui->sldTungsten, 0,0,0,0);
-    changeBackgroundOfRGBSlider(ui->sldBrightness, 0,0,0,0);
-    sendArduinoCmd("r:0");
-    sendArduinoCmd("g:0");
-    sendArduinoCmd("b:0");
+    sliders.push_back(tempSliders);    
+
 
     //setup HSV page
     tempBorders.clear();
@@ -101,17 +109,8 @@ MainWindow::MainWindow(QWidget *parent)
     tempSliders.push_back(ui->sldSat);
     tempSliders.push_back(ui->sldVal);
     sliders.push_back(tempSliders);
-    // put sliders to 0
-    ui->sldHue->setValue(0);
-    ui->sldSat->setValue(0);
-    ui->sldVal->setValue(0);
-    changeBackgroundOfHSVSlider(ui->sldHue, 0,0,0);
-    changeBackgroundOfHSVSlider(ui->sldSat, 0,0,0);
-    changeBackgroundOfHSVSlider(ui->sldVal,0,0,0);
-    //set value in arduino
-    sendArduinoCmd("h:0");
-    sendArduinoCmd("s:0");
-    sendArduinoCmd("v:0");
+
+
 
     //setup gradient page
     tempBorders.clear();
@@ -130,35 +129,82 @@ MainWindow::MainWindow(QWidget *parent)
     tempSliders.push_back(ui->sldEndSat);
     tempSliders.push_back(ui->sldEndVal);
     sliders.push_back(tempSliders);
-    //put sliders to 0
+
+    highlightSlider(curHighlight);
+
+    //during testing it would open on tab 3 but the Arduino would not be in that mode because we didnt click and send the message
+    //set it to be the first tab that way you have to click to go to another tab with actually sends the mode number
+    ui->tabWidget->setCurrentIndex(static_cast<int>(config.mode));
+
+
+   // loadCOMPorts();
+
+}
+
+void MainWindow::sendInitData(){
+    //rgb
+    sendArduinoCmd("r:" + QString::number(config.r));
+    sendArduinoCmd("g:" + QString::number(config.g));
+    sendArduinoCmd("b:" + QString::number(config.b));
+    sendArduinoCmd("d:" + QString::number(config.d));
+    sendArduinoCmd("t:" + QString::number(config.t));
+    //hsv
+    sendArduinoCmd("h:" + QString::number(config.h));
+    sendArduinoCmd("s:" + QString::number(config.s));
+    sendArduinoCmd("v:" + QString::number(config.v));
+
+    //gradient
+    sendArduinoCmd("sh:" + QString::number(config.sh));
+    sendArduinoCmd("ss:" + QString::number(config.ss));
+    sendArduinoCmd("sv:" + QString::number(config.sv));
+    sendArduinoCmd("eh:" + QString::number(config.eh));
+    sendArduinoCmd("es:" + QString::number(config.es));
+    sendArduinoCmd("ev:" + QString::number(config.ev));
+
+}
+
+//call this after everything has been drawn
+void MainWindow::loadSliders(){
+
+    //move all sliders down and show no background
+    changeBackgroundOfRGBSlider(ui->sldRed, 255,0,0, config.r / 255.0);
+    changeBackgroundOfRGBSlider(ui->sldGreen,0,255,0, config.g / 255.0);
+    changeBackgroundOfRGBSlider(ui->sldBlue, 0,0,255, config.b / 255.0);
+    changeBackgroundOfRGBSlider(ui->sldDaylight, 198, 243, 255, config.t / 255.0);
+    changeBackgroundOfRGBSlider(ui->sldTungsten, 255,212,125 , config.d / 255.0);
+    changeBackgroundOfRGBSlider(ui->sldBrightness,194,194,194, config.B / 255.0);
+    ui->sldRed->setValue(config.r);
+    ui->sldGreen->setValue(config.g);
+    ui->sldBlue->setValue(config.b);
+    ui->sldDaylight->setValue(config.d);
+    ui->sldTungsten->setValue(config.t);
+    ui->sldBrightness->setValue(config.B);
+
+
+    //hsv
+    ui->sldHue->setValue(config.h);
+    ui->sldSat->setValue(config.s);
+    ui->sldVal->setValue(config.v);
+    changeBackgroundOfHSVSlider(ui->sldHue, config.h,0,0);
+    changeBackgroundOfHSVSlider(ui->sldSat, config.h,config.s,0);
+    changeBackgroundOfHSVSlider(ui->sldVal,config.h,config.s,config.v);
+
+    //gradient
     ui->sldStartHue->setValue(0);
     ui->sldStartSat->setValue(0);
     ui->sldStartVal->setValue(0);
     ui->sldEndHue->setValue(0);
     ui->sldEndSat->setValue(0);
     ui->sldEndVal->setValue(0);
-    changeBackgroundOfHSVSlider(ui->sldStartHue, 0,0,0);
-    changeBackgroundOfHSVSlider(ui->sldStartSat, 0,0,0);
-    changeBackgroundOfHSVSlider(ui->sldStartVal,0,0,0);
-    changeBackgroundOfHSVSlider(ui->sldEndHue, 0,0,0);
-    changeBackgroundOfHSVSlider(ui->sldEndSat, 0,0,0);
-    changeBackgroundOfHSVSlider(ui->sldEndVal,0,0,0);
-    sendArduinoCmd("sh:0");
-    sendArduinoCmd("ss:0");
-    sendArduinoCmd("sv:0");
-    sendArduinoCmd("eh:0");
-    sendArduinoCmd("es:0");
-    sendArduinoCmd("ev:0");
+    changeBackgroundOfHSVSlider(ui->sldStartHue, config.sh,0,0);
+    changeBackgroundOfHSVSlider(ui->sldStartSat, config.sh,config.ss,0);
+    changeBackgroundOfHSVSlider(ui->sldStartVal,config.sh, config.ss, config.sv);
+    changeBackgroundOfHSVSlider(ui->sldEndHue, config.eh,0,0);
+    changeBackgroundOfHSVSlider(ui->sldEndSat, config.eh,config.es,0);
+    changeBackgroundOfHSVSlider(ui->sldEndVal,config.eh,config.es,config.ev);
 
-    highlightSlider(curHighlight);   
-
-    //during testing it would open on tab 3 but the Arduino would not be in that mode because we didnt click and send the message
-    //set it to be the first tab that way you have to click to go to another tab with actually sends the mode number
-    ui->tabWidget->setCurrentIndex(0);
-
-
+    sendArduinoCmd("lastload");
 }
-
 void MainWindow::loadCOMPorts(){
     QString arduino_uno_port_name;
     //while (ui->cmbCOM->count() > 0){
@@ -174,11 +220,10 @@ void MainWindow::loadCOMPorts(){
     ui->cmbCOM->addItems(comPORTS);
     firstLoad = false;
 
-    //just automatically try to connect to the first item in the list if there is one
-    if (comPORTS.size() > 0){
+
+   if (comPORTS.size() > 0){
         initArduino(comPORTS[0]);
     }
-
 
 }
 
@@ -195,10 +240,11 @@ void MainWindow::initArduino(QString port){
     arduino->setParity(QSerialPort::NoParity);
     arduino->setStopBits(QSerialPort::OneStop);
     QObject::connect(arduino, SIGNAL(readyRead()), this, SLOT(readSerial()));
-   // while (!isArduinoConnected){
+    while (!isArduinoConnected){
+        arduino->waitForReadyRead(500);
         sendArduinoCmd("init");
-        //sleep(1);
-   // }
+    }
+
     ui->lblStatus->setText("Connected to Arduino on " + port);
     cout << "Connected to Arduino on " << port.toStdString() << endl;
     firstLoad = false;
@@ -219,6 +265,11 @@ void MainWindow::readSerial()
     //which means it doesnt read everything in one go
 
    serialData = arduino->readAll();
+   cout << "SerialData: ";
+   for(int i = 0; i < serialData.size(); i++){
+    cout << serialData[i];
+   }
+   cout << endl;
 
    //read through everything you have, start a new message at every <, parse the message as command at every >,
    //build up the string otherwise
@@ -236,6 +287,7 @@ void MainWindow::readSerial()
 
 }
 
+
 void MainWindow::parseArduinoCmd(string in){
 
      cout << "USB IN: " << in << endl;
@@ -243,6 +295,9 @@ void MainWindow::parseArduinoCmd(string in){
 
         if (in == "ready"){
             isArduinoConnected = true;
+           // loadSliders();
+        } else if (in == "lastload"){
+            cout << " LOAD FINISHED"<<endl;
         } else if (in == "enc"){
 
          if (encMode == SCROLL_HIGHLIGHT){
@@ -260,20 +315,20 @@ void MainWindow::parseArduinoCmd(string in){
      } else if (in == "enc+"){
          if (encMode == SCROLL_HIGHLIGHT){
              curHighlight++;
-             if (curHighlight > sliders[mode].size()-1) { curHighlight = 0;}
+             if (curHighlight > sliders[config.mode].size()-1) { curHighlight = 0;}
              highlightSlider(curHighlight);
          } else if (encMode == CHANGE_VALUE){
-             int curVal = sliders[mode][curSelection]->value();
-             sliders[mode][curSelection]->setValue(curVal + 3);
+             int curVal = sliders[config.mode][curSelection]->value();
+             sliders[config.mode][curSelection]->setValue(curVal + 3);
          }
      } else if (in == "enc-"){
          if (encMode == SCROLL_HIGHLIGHT){
              curHighlight--;
-             if (curHighlight < 0) { curHighlight = sliders[mode].size()-1;}
+             if (curHighlight < 0) { curHighlight = sliders[config.mode].size()-1;}
              highlightSlider(curHighlight);
          } else if (encMode == CHANGE_VALUE){
-             int curVal = sliders[mode][curSelection]->value();
-             sliders[mode][curSelection]->setValue(curVal - 3);
+             int curVal = sliders[config.mode][curSelection]->value();
+             sliders[config.mode][curSelection]->setValue(curVal - 3);
          }
      }
 
@@ -285,14 +340,17 @@ void MainWindow::parseArduinoCmd(string in){
 }
 
 void MainWindow::sendArduinoCmd(QString in){
-    //in = "<" + in + ">";
-    in += '\n';
+
+   in = "<" + in + ">";
     arduino->write(in.toUtf8());
     cout << "USB OUT: " << in.toStdString();
+   // while(!arduino->waitForBytesWritten()) {;}
+    //arduino->waitForReadyRead(5);
 }
 
 void MainWindow::on_btnClose_clicked()
 {
+
     arduino->close();
     MainWindow::close();
 }
@@ -323,8 +381,7 @@ void MainWindow::on_sldRed_valueChanged(int value)
 {
     //turn the value into a valid Arduino command
     //r:100
-    QString msg = "r:" + QString::number(value);   
-    sendArduinoCmd(msg);
+
      changeBackgroundOfRGBSlider(ui->sldRed, 200, 0, 0 , value/255.0);
     if (curSelection != RED){
        curSelection = RED;
@@ -332,6 +389,11 @@ void MainWindow::on_sldRed_valueChanged(int value)
        highlightSlider(curHighlight);
        selectSlider(curSelection);
    }
+    config.r = value;
+    saveDataToFile();
+
+    QString msg = "r:" + QString::number(value);
+    sendArduinoCmd(msg);
 }
 
 
@@ -339,8 +401,7 @@ void MainWindow::on_sldGreen_valueChanged(int value)
 {
     //turn the value into a valid Arduino command
     //r:100
-    QString msg = "g:" + QString::number(value);
-    sendArduinoCmd(msg);
+
     changeBackgroundOfRGBSlider(ui->sldGreen, 0, 200, 0 , value/255.0);
     if (curSelection != GREEN){
        curSelection = GREEN;
@@ -348,6 +409,11 @@ void MainWindow::on_sldGreen_valueChanged(int value)
        highlightSlider(curHighlight);
        selectSlider(curSelection);
    }
+    config.g = value;
+    saveDataToFile();
+
+    QString msg = "g:" + QString::number(value);
+    sendArduinoCmd(msg);
 }
 
 
@@ -355,8 +421,7 @@ void MainWindow::on_sldBlue_valueChanged(int value)
 {
     //turn the value into a valid Arduino command
     //r:100
-    QString msg = "b:" + QString::number(value);
-    sendArduinoCmd(msg);
+
      changeBackgroundOfRGBSlider(ui->sldBlue, 0, 0, 200, value/255.0);
     if (curSelection != BLUE){
        curSelection = BLUE;
@@ -364,6 +429,11 @@ void MainWindow::on_sldBlue_valueChanged(int value)
        highlightSlider(curHighlight);
        selectSlider(curSelection);
    }
+    config.b = value;
+    saveDataToFile();
+
+    QString msg = "b:" + QString::number(value);
+    sendArduinoCmd(msg);
 }
 
 
@@ -373,8 +443,7 @@ void MainWindow::on_sldTungsten_valueChanged(int value)
 {
     //turn the value into a valid Arduino command
     //r:100
-    QString msg = "t:" + QString::number(value);
-    sendArduinoCmd(msg);
+
     changeBackgroundOfRGBSlider(ui->sldTungsten, 255,212,125 , value/255.0);
     if (curSelection != TUNGSTEN){
        curSelection = TUNGSTEN;
@@ -382,6 +451,11 @@ void MainWindow::on_sldTungsten_valueChanged(int value)
        highlightSlider(curHighlight);
        selectSlider(curSelection);
    }
+    config.t = value;
+    saveDataToFile();
+
+    QString msg = "t:" + QString::number(value);
+    sendArduinoCmd(msg);
 }
 
 
@@ -391,8 +465,7 @@ void MainWindow::on_sldDaylight_valueChanged(int value)
 {
     //turn the value into a valid Arduino command
     //r:100
-    QString msg = "d:" + QString::number(value);
-    sendArduinoCmd(msg);
+
     changeBackgroundOfRGBSlider(ui->sldDaylight, 198, 243, 255 , value/255.0);
     if (curSelection != DAYLIGHT){
        curSelection = DAYLIGHT;
@@ -400,6 +473,11 @@ void MainWindow::on_sldDaylight_valueChanged(int value)
        highlightSlider(curHighlight);
        selectSlider(curSelection);
    }
+    config.d = value;
+    saveDataToFile();
+
+    QString msg = "d:" + QString::number(value);
+    sendArduinoCmd(msg);
 }
 
 
@@ -407,8 +485,7 @@ void MainWindow::on_sldBrightness_valueChanged(int value)
 {
     //turn the value into a valid Arduino command
     //r:100
-    QString msg = "B:" + QString::number(value);
-    sendArduinoCmd(msg);
+
     changeBackgroundOfRGBSlider(ui->sldBrightness, 194,194,194, value/255.0);
     if (curSelection != BRIGHTNESS){
        curSelection = BRIGHTNESS;
@@ -417,43 +494,41 @@ void MainWindow::on_sldBrightness_valueChanged(int value)
        selectSlider(curSelection);
    }
 
+    config.B = value;
+    saveDataToFile();
+
+    QString msg = "B:" + QString::number(value);
+    sendArduinoCmd(msg);
+
 }
 
-
-void MainWindow::on_sldRed_sliderPressed()
-{
-
-}
 
 void MainWindow::highlightSlider(int sld){
 
-
+    if (sld == -1){
+        cout << "No slider to highlight!" <<endl;
+        return;
+    }
     //make them all white
-    for(int i = 0; i < borders[mode].size(); i++){
+    for(int i = 0; i < borders[config.mode].size(); i++){
         if (i != sld)
-            borders[mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
+            borders[config.mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
     }
     //now highlight one of them
-    borders[mode][sld]->setStyleSheet(STYLE_HIGHLIGHT_BORDER);
+    borders[config.mode][sld]->setStyleSheet(STYLE_HIGHLIGHT_BORDER);
 }
 
 void MainWindow::selectSlider(int sld){
 
+    if (sld == -1){
+        cout << "No slider to highlight!" <<endl;
+        return;
+    }
     //slider should already be highlighted so just turn that one selected
-    borders[mode][sld]->setStyleSheet(STYLE_SELECTED_BORDER);
+    borders[config.mode][sld]->setStyleSheet(STYLE_SELECTED_BORDER);
 }
 
 
-void MainWindow::on_tabWidget_currentChanged(int index)
-{
-    cout << "Clicked index " << index;
-    QString msg = "m:" + QString::number(index);
-    sendArduinoCmd(msg);
-    mode = static_cast<MODE>(index);
-    curHighlight = 0;
-    curSelection = -1;
-    highlightSlider(curHighlight);
-}
 
 void changeBackgroundOfHSVSlider(QSlider * sld,int h, int s, int v){
 
@@ -524,11 +599,11 @@ void MainWindow::on_sldHue_valueChanged(int value)
     double zeroTo1 = value / 359.0;
     value = (int)(zeroTo1 * 254);
     QString msg = "h:" + QString::number(value);
-
     sendArduinoCmd(msg);
+    config.h = value;
+    saveDataToFile();
 
-    //temp
-    ui->lblHue->setText(QString::number(value));
+
 }
 
 
@@ -544,6 +619,8 @@ void MainWindow::on_sldSat_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldVal, ui->sldHue->value(),value,ui->sldVal->value());
     QString msg = "s:" + QString::number(value);
     sendArduinoCmd(msg);
+    config.s = value;
+    saveDataToFile();
 }
 
 
@@ -558,6 +635,8 @@ void MainWindow::on_sldVal_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldVal, ui->sldHue->value(),ui->sldSat->value(),value);
     QString msg = "v:" + QString::number(value);
     sendArduinoCmd(msg);
+    config.v = value;
+    saveDataToFile();
 }
 
 void changeGradientStyleBasedOnSliders(Ui::MainWindow * ui){
@@ -592,6 +671,8 @@ void MainWindow::on_sldStartHue_valueChanged(int value)
     QString msg = "sh:" + QString::number(value);
     sendArduinoCmd(msg);
     changeGradientStyleBasedOnSliders(ui);
+    config.sh = value;
+    saveDataToFile();
 }
 
 
@@ -610,6 +691,8 @@ void MainWindow::on_sldStartSat_valueChanged(int value)
     QString msg = "ss:" + QString::number(value);
     sendArduinoCmd(msg);
     changeGradientStyleBasedOnSliders(ui);
+    config.ss = value;
+    saveDataToFile();
 }
 
 
@@ -626,6 +709,8 @@ void MainWindow::on_sldStartVal_valueChanged(int value)
     QString msg = "sv:" + QString::number(value);
     sendArduinoCmd(msg);
     changeGradientStyleBasedOnSliders(ui);
+    config.sv = value;
+    saveDataToFile();
 }
 
 
@@ -648,6 +733,8 @@ void MainWindow::on_sldEndHue_valueChanged(int value)
     QString msg = "eh:" + QString::number(value);
     sendArduinoCmd(msg);
     changeGradientStyleBasedOnSliders(ui);
+    config.eh = value;
+    saveDataToFile();
 }
 
 
@@ -665,6 +752,8 @@ void MainWindow::on_sldEndSat_valueChanged(int value)
     QString msg = "es:" + QString::number(value);
     sendArduinoCmd(msg);
     changeGradientStyleBasedOnSliders(ui);
+    config.es = value;
+    saveDataToFile();
 }
 
 
@@ -680,5 +769,70 @@ void MainWindow::on_sldEndVal_valueChanged(int value)
     QString msg = "ev:" + QString::number(value);
     sendArduinoCmd(msg);
     changeGradientStyleBasedOnSliders(ui);
+    config.ev = value;
+    saveDataToFile();
+}
+
+void MainWindow::saveDataToFile(){
+    ofstream outfile(FILE_NAME.toStdString().c_str());
+    if (!outfile.is_open()){
+        //TODO make this a message box
+        cout << "Error could not open the settings file to save data!" <<endl;
+        exit(1);
+    }
+
+    //first line is rgb
+    outfile << config.r << " " << config.g << " " << config.b << " " << config.d << " " << config.t << " " << config.B << endl;
+    //second is HSV
+    outfile << config.h << " " << config.s << " " << config.v << endl;
+    //third line is gradient
+    outfile << config.sh << " " << config.ss << " " << config.sv << " " << config.eh << " " << config.es << " " << config.ev << endl;
+    //last line is the mode
+    outfile << config.mode << endl;
+    outfile.close();
+}
+
+void MainWindow::loadDataFromFile(){
+    ifstream infile(FILE_NAME.toStdString().c_str());
+    if (!infile.is_open()){
+        //TODO make this a message box
+        cout << "Created new settings file!" <<endl;
+        CONFIG newConf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,static_cast<MODE>(0)};
+        config = newConf;
+        saveDataToFile();
+    }
+
+    //first line is rgb
+    infile >> config.r >> config.g >> config.b >> config.d >> config.t >> config.B;
+    //second is HSV
+    infile >> config.h >> config.s >> config.v;
+    //third line is gradient
+    infile >> config.sh >> config.ss >> config.sv >> config.eh >> config.es >> config.ev;
+    //last line is the mode
+    int tempMode;
+    infile >> tempMode;
+    config.mode = static_cast<MODE>(tempMode);
+    infile.close();
+
+    cout << "---Loaded config settings---" << endl;
+    cout << "R,G,B,D,T,B:\t" << config.r << " "  << config.g  << " "  << config.b <<  " "  << config.d <<  " "  << config.t << " "  << config.B <<endl;
+    cout << "H,S,V:\t" << config.h << " "  << config.s  << " "  << config.v << endl;
+    cout << "GRADIENT" << endl;
+    cout << "\tSTART--> H,S,V:\t" << config.sh << " "  << config.ss  << " "  << config.sv << endl;
+    cout << "\tEND  --> H,S,V:\t" << config.eh << " "  << config.es  << " "  << config.ev << endl;
+    cout << "MODE: " << static_cast<int> (config.mode) << endl;
+}
+
+void MainWindow::on_tabWidget_tabBarClicked(int index)
+{
+    cout << "CLICKED: " << index << endl;
+    config.mode = static_cast<MODE>(index);
+    curHighlight = 0;
+    curSelection = -1;
+    highlightSlider(curHighlight);
+    saveDataToFile();
+
+    QString msg = "m:" + QString::number(index);
+    sendArduinoCmd(msg);
 }
 
