@@ -788,7 +788,7 @@ void MainWindow::saveDataToFile(){
     //third line is gradient
     outfile << config.sh << " " << config.ss << " " << config.sv << " " << config.eh << " " << config.es << " " << config.ev << endl;
     //last line is the mode
-    outfile << config.mode << endl;
+    outfile << static_cast<int>(config.mode) << endl;
     outfile.close();
 }
 
