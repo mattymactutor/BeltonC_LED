@@ -48,11 +48,9 @@ enum ENC_MODE{
 ENC_MODE encMode = SCROLL_HIGHLIGHT;
 
 #define NUM_MODES 3
-enum MODE{
-    RGB = 0,
-    HSV = 1,
-    GRADIENT = 2
-};
+#define RGB 0
+#define HSV 1
+#define GRADIENT 2
 bool configDataSentToArduino[NUM_MODES];
 
 
@@ -63,7 +61,7 @@ struct CONFIG{
     int r, g, b, d, t, B;
     int sh,ss,sv,eh,es,ev;
     //possibly add ability to change the num of leds? for the gradient.
-    enum MODE mode;
+    int mode;
 };
 
 CONFIG config;
@@ -179,8 +177,8 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::sendInitData(int idx){
-    MODE m = static_cast<MODE>(idx);
-    if (m == MODE::RGB){
+
+    if (idx == RGB){
     //rgb
     sendArduinoCmd("r:" + QString::number(config.r));
     sendArduinoCmd("g:" + QString::number(config.g));
@@ -190,13 +188,13 @@ void MainWindow::sendInitData(int idx){
     sendArduinoCmd("B:" + QString::number(config.B));
     loadSliders(idx);
 
-    } else if (m == MODE::HSV){
+    } else if (idx == HSV){
     //hsv
     sendArduinoCmd("h:" + QString::number(config.h));
     sendArduinoCmd("s:" + QString::number(config.s));
     sendArduinoCmd("v:" + QString::number(config.v));
     loadSliders(idx);
-    } else if (m == MODE::GRADIENT){
+    } else if (idx == GRADIENT){
     //gradient
     sendArduinoCmd("sh:" + QString::number(config.sh));
     sendArduinoCmd("ss:" + QString::number(config.ss));
@@ -207,13 +205,13 @@ void MainWindow::sendInitData(int idx){
     loadSliders(idx);
     }
     //mark that we sent data for that page
-    configDataSentToArduino[static_cast<int>(m)] = true;
+    configDataSentToArduino[idx] = true;
 }
 
 //call this after everything has been drawn
 void MainWindow::loadSliders(int idx){
-    MODE m = static_cast<MODE>(idx);
-    if (m == MODE::RGB){
+
+    if (idx == RGB){
     //move all sliders down and show no background
     changeBackgroundOfRGBSlider(ui->sldRed, 255,0,0, config.r / 255.0);
     changeBackgroundOfRGBSlider(ui->sldGreen,0,255,0, config.g / 255.0);
@@ -227,7 +225,7 @@ void MainWindow::loadSliders(int idx){
     ui->sldDaylight->setValue(config.d);
     ui->sldTungsten->setValue(config.t);
     ui->sldBrightness->setValue(config.B);
-    } else  if (m == MODE::HSV){
+    } else  if (idx == HSV){
 
 
     //hsv
@@ -241,7 +239,7 @@ void MainWindow::loadSliders(int idx){
     changeBackgroundOfHSVSlider(ui->sldSat, config.h,config.s,255);
     changeBackgroundOfHSVSlider(ui->sldVal,config.h,config.s,config.v);    
 
-    } else  if (m == MODE::GRADIENT){
+    } else  if (idx == GRADIENT){
 
     //gradient
         //convert the hue
@@ -828,7 +826,7 @@ void MainWindow::loadDataFromFile(){
     if (!infile.is_open()){
         //TODO make this a message box
         cout << "Created new settings file!" <<endl;
-        CONFIG newConf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,static_cast<MODE>(0)};
+        CONFIG newConf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
         config = newConf;
         saveDataToFile();
     }
@@ -839,10 +837,8 @@ void MainWindow::loadDataFromFile(){
     infile >> config.h >> config.s >> config.v;
     //third line is gradient
     infile >> config.sh >> config.ss >> config.sv >> config.eh >> config.es >> config.ev;
-    //last line is the mode
-    int tempMode;
-    infile >> tempMode;
-    config.mode = static_cast<MODE>(tempMode);
+    //last line is the mode 
+    infile >> config.mode ;
     infile.close();
 
     cout << "---Loaded config settings---" << endl;
@@ -851,13 +847,13 @@ void MainWindow::loadDataFromFile(){
     cout << "GRADIENT" << endl;
     cout << "\tSTART--> H,S,V:\t" << config.sh << " "  << config.ss  << " "  << config.sv << endl;
     cout << "\tEND  --> H,S,V:\t" << config.eh << " "  << config.es  << " "  << config.ev << endl;
-    cout << "MODE: " << static_cast<int> (config.mode) << endl;
+    cout << "MODE: " << config.mode << endl;
 }
 
 void MainWindow::on_tabWidget_tabBarClicked(int index)
 {
     cout << "CLICKED: " << index << endl;
-    config.mode = static_cast<MODE>(index);
+    config.mode = index;
     curHighlight = 0;
     curSelection = -1;
     highlightSlider(curHighlight);
