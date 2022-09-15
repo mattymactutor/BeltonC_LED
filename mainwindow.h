@@ -4,26 +4,8 @@
 #include <QMainWindow>
 #include <string>
 #include "Serial_Comm_Footpedal.h"
-using namespace std;
 
-//RGB SLIDERS
-#define RED 0
-#define GREEN 1
-#define BLUE 2
-#define TUNGSTEN 3
-#define DAYLIGHT 4
-#define BRIGHTNESS 5
-//HSV SLIDERS
-#define HUE 0
-#define SAT 1
-#define VAL 2
-//GRADIENT SLIDERS
-#define STARTHUE 0
-#define STARTSAT 1
-#define STARTVAL 2
-#define ENDHUE 3
-#define ENDSAT 4
-#define ENDVAL 5
+using namespace std;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -38,7 +20,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void loadSliders();
+
 
 private:
     Ui::MainWindow *ui;    
@@ -48,14 +30,12 @@ private:
     void selectSlider(int sld);
     void loadDataFromFile();
     void saveDataToFile();
-    void sendInitData();
+    void sendInitData(int idx);
     void sendArduinoCmd(QString in);
+     void loadSliders(int idx);
 
 
-
-
-
-private slots:     
+private slots:
        void on_btnClose_clicked();
        void on_cmbCOM_currentIndexChanged(int index);
        void on_sldRed_valueChanged(int value);

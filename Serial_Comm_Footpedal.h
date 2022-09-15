@@ -22,6 +22,7 @@ private:
     SerialPort serial_port;
     bool isOpen = false, isConnected_ = false;
     string inMsg,port;
+    bool waitingFroResponse = false;
     thread * thListen = nullptr;
     void (* parseFunct)(string);
 	
@@ -127,6 +128,7 @@ public:
 		cout << "Parse: " << cmd << endl;
 	}
 	void sendMsg(string cmd){
+         waitingFroResponse = true;
 		string sen = "<" + cmd + ">";
 		if (serial_port.IsOpen()){
 			serial_port.Write(sen);
@@ -134,6 +136,10 @@ public:
 		} else {
 			cout << "Serial Closed, Did Not Send: " << sen << endl;
 		}
+
+        /*while (waitingFroResponse){
+            ;;
+        }*/
 	}
 	
 	void close(){
@@ -180,6 +186,8 @@ public:
 				if ( data_byte == '<'){
 					inMsg = "";
 				}else if ( data_byte == '>'){
+
+                    waitingFroResponse = false;
 					//parseUSBCommand(inMsg);
                     /*cout << inMsg << endl;
                     if (inMsg == "ready"){

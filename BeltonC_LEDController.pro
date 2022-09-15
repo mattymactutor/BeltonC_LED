@@ -15,7 +15,8 @@ SOURCES += \
 HEADERS += \
     mainwindow.h \
     styles.h \
-    Serial_Comm_Footpedal.h
+    Serial_Comm_Footpedal.h \
+    variables.h
 
 FORMS += \
     mainwindow.ui
