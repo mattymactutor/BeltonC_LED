@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Removing old files..."
+cd
 sudo rm -r BeltonC_LED
 echo "Downloading new code files from Github..."
 git clone https://github.com/mattymactutor/BeltonC_LED
