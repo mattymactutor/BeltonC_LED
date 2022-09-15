@@ -8,7 +8,6 @@
 using namespace std;
 #include <QMessageBox>
 #include <unistd.h>
-#include "variables.h"
 
 /*
  * TODO FUTURE
