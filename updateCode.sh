@@ -1,13 +1,10 @@
 #!/bin/bash
 
 echo "Removing old files..."
-cd
-sudo rm -r BeltonC_LED
-echo "Downloading new code files from Github..."
-git clone https://github.com/mattymactutor/BeltonC_LED
 cd BeltonC_LED
-echo "Making updateCode executable"
-sudo chmod +x updateCode.sh
+make clean
+echo "Downloading new code files from Github..."
+git pull
 echo "Building qmake..."
 sleep 1
 qmake -o Makefile BeltonC_LEDController.pro
