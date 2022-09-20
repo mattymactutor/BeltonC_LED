@@ -75,6 +75,7 @@ QStringList comPORTS;
 bool firstLoad = true;
 bool isArduinoConnected = false;
 const QString FILE_NAME = "config.txt";
+int curHighlight = 0, curSelection = -1;
 
 
 Ui::MainWindow * ui2;
@@ -82,12 +83,71 @@ void changeBackgroundOfHSVSlider(QSlider *, int, int,int);
 void changeBackgroundOfRGBSlider(QSlider * sld, int R, int G, int B, double percent);
 void changeGradientStyleBasedOnSliders(Ui::MainWindow * ui);
 
+void highlightSlider(int sld){
+    //make them all white
+    for(int i = 0; i < borders[config.mode].size(); i++){
+       borders[config.mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
+    }
+    if (sld == -1){
+        cout << "No slider to highlight!" <<endl;
+        return;
+    }
 
-void parseUSBCmd(string cmd){
-    cout << "USB IN: " << cmd << endl;
-    ui2->lblIncMsg->setText(QString::fromStdString(cmd));
-    if (cmd == "ready"){
+    //now highlight one of them
+    borders[config.mode][sld]->setStyleSheet(STYLE_HIGHLIGHT_BORDER);
+}
+
+void selectSlider(int sld){
+
+    if (sld == -1){
+        cout << "No slider to highlight!" <<endl;
+        return;
+    }
+    //slider should already be highlighted so just turn that one selected
+    borders[config.mode][sld]->setStyleSheet(STYLE_SELECTED_BORDER);
+}
+
+
+void parseUSBCmd(string in){
+    cout << "USB IN: " << in << endl;
+    ui2->lblIncMsg->setText(QString::fromStdString(in));
+    if (in == "ready"){
         arduino->setConnected(true);
+    }
+        else if (in == "lastload"){
+           cout << " LOAD FINISHED"<<endl;
+       } else if (in == "enc"){
+
+        if (encMode == SCROLL_HIGHLIGHT){
+            //if we are scrolling now a click should select whatever is highlighted
+            selectSlider(curHighlight);
+            curSelection = curHighlight;
+            encMode = CHANGE_VALUE;
+        } else if (encMode == CHANGE_VALUE){
+            highlightSlider(curSelection);
+            curHighlight = curSelection;
+            curSelection = -1; //deselect
+            encMode = SCROLL_HIGHLIGHT;
+        }
+
+    } else if (in == "enc+"){
+        if (encMode == SCROLL_HIGHLIGHT){
+            curHighlight++;
+            if (curHighlight > sliders[config.mode].size()-1) { curHighlight = 0;}
+            highlightSlider(curHighlight);
+        } else if (encMode == CHANGE_VALUE){
+            int curVal = sliders[config.mode][curSelection]->value();
+            sliders[config.mode][curSelection]->setValue(curVal + 3);
+        }
+    } else if (in == "enc-"){
+        if (encMode == SCROLL_HIGHLIGHT){
+            curHighlight--;
+            if (curHighlight < 0) { curHighlight = sliders[config.mode].size()-1;}
+            highlightSlider(curHighlight);
+        } else if (encMode == CHANGE_VALUE){
+            int curVal = sliders[config.mode][curSelection]->value();
+            sliders[config.mode][curSelection]->setValue(curVal - 3);
+        }
     }
 }
 
@@ -186,6 +246,7 @@ void MainWindow::sendInitData(int idx){
     sendArduinoCmd("t:" + QString::number(config.t));
     sendArduinoCmd("B:" + QString::number(config.B));
     loadSliders(idx);
+    highlightSlider(0);
 
     } else if (idx == HSV){
     //hsv
@@ -193,6 +254,7 @@ void MainWindow::sendInitData(int idx){
     sendArduinoCmd("s:" + QString::number(config.s));
     sendArduinoCmd("v:" + QString::number(config.v));
     loadSliders(idx);
+    highlightSlider(0);
     } else if (idx == GRADIENT){
     //gradient
     sendArduinoCmd("sh:" + QString::number(config.sh));
@@ -202,6 +264,7 @@ void MainWindow::sendInitData(int idx){
     sendArduinoCmd("es:" + QString::number(config.es));
     sendArduinoCmd("ev:" + QString::number(config.ev));
     loadSliders(idx);
+    highlightSlider(0);
     }
     //mark that we sent data for that page
     configDataSentToArduino[idx] = true;
@@ -334,22 +397,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_cmbCOM_currentIndexChanged(int index)
-{
-    /*if (firstLoad){
-        loadCOMPorts();
-        return;
-    }
-
-    if (arduino->isOpen()){
-        arduino->close();
-    }
-    //+1 because the first option should be blank
-    QString port = comPORTS[index-1];
-    cout << "trying to connect to Arduino on port : " << port.toStdString() << endl;
-    initArduino(port);*/
-
-}
 
 void MainWindow::on_sldRed_valueChanged(int value)
 {
@@ -498,30 +545,7 @@ void MainWindow::on_sldBrightness_valueChanged(int value)
 }
 
 
-void MainWindow::highlightSlider(int sld){
 
-    if (sld == -1){
-        cout << "No slider to highlight!" <<endl;
-        return;
-    }
-    //make them all white
-    for(int i = 0; i < borders[config.mode].size(); i++){
-        if (i != sld)
-            borders[config.mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
-    }
-    //now highlight one of them
-    borders[config.mode][sld]->setStyleSheet(STYLE_HIGHLIGHT_BORDER);
-}
-
-void MainWindow::selectSlider(int sld){
-
-    if (sld == -1){
-        cout << "No slider to highlight!" <<endl;
-        return;
-    }
-    //slider should already be highlighted so just turn that one selected
-    borders[config.mode][sld]->setStyleSheet(STYLE_SELECTED_BORDER);
-}
 
 
 
@@ -854,7 +878,8 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
     cout << "CLICKED: " << index << endl;
     config.mode = index;
     curHighlight = 0;
-    curSelection = -1;
+    curSelection = 0;
+    selectSlider(curSelection);
     highlightSlider(curHighlight);
     saveDataToFile();
 

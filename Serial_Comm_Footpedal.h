@@ -194,6 +194,7 @@ public:
                         isConnected = true;
                     } else {*/
                         parseFunct(inMsg);
+
                    // }
 				} else {
 					inMsg += data_byte;

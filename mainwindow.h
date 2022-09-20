@@ -20,24 +20,23 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+    //int curHighlight = 0, curSelection = -1;
+    //void highlightSlider(int sld);
+    //void selectSlider(int sld);
 
 private:
     Ui::MainWindow *ui;    
-    std::string serialBuffer;
-    int curHighlight = 0, curSelection = -1;   
-    void highlightSlider(int sld);
-    void selectSlider(int sld);
+
     void loadDataFromFile();
     void saveDataToFile();
     void sendInitData(int idx);
     void sendArduinoCmd(QString in);
-     void loadSliders(int idx);
+    void loadSliders(int idx);
+   // void parseUSBCmd(string in);
 
 
 private slots:
-       void on_btnClose_clicked();
-       void on_cmbCOM_currentIndexChanged(int index);
+       void on_btnClose_clicked();       
        void on_sldRed_valueChanged(int value);
        void on_sldGreen_valueChanged(int value);
        void on_sldBlue_valueChanged(int value);
