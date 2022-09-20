@@ -1,6 +1,0 @@
-[Desktop Entry]
-Name=Update Code
-Comment=This code will download and recompile the LED Controller
-Exec=xterm -e "echo \"Downloading files..\";sleep 2; git clone https://github.com/mattymactutor/BeltonC_LED; bash /home/pi/BeltonC_LED/updateCode.sh"
-Type=Application
-Encoding=UTF-8
