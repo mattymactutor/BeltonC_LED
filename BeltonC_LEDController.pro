@@ -14,6 +14,7 @@ SOURCES += \
 
 HEADERS += \
     mainwindow.h \
+    millis.h \
     styles.h \
     Serial_Comm_Footpedal.h
 

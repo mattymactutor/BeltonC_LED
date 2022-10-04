@@ -25,6 +25,8 @@ private:
     bool waitingFroResponse = false;
     thread * thListen = nullptr;
     void (* parseFunct)(string);
+    void (* parseByteFunct)(unsigned char);
+    unsigned char ACK = 128;
 	
 	
 public:
@@ -58,6 +60,10 @@ public:
             usleep(500*1000);
         }*/
 	}
+
+    void setParseByteFunc(void (*pBF)(unsigned char)){
+        parseByteFunct = pBF;
+    }
 
     void setConnected(bool b){
         isConnected_ = b;
@@ -137,9 +143,9 @@ public:
 			cout << "Serial Closed, Did Not Send: " << sen << endl;
 		}
 
-        /*while (waitingFroResponse){
+        while (waitingFroResponse){
             ;;
-        }*/
+        }
 	}
 	
 	void close(){
@@ -175,15 +181,25 @@ public:
 			size_t ms_timeout = 1000 ;
 
 			// Char variable to store data coming from the serial port.
-			char data_byte ;
+            unsigned char data_byte ;
 
 			// Read one byte from the serial port and print it to the terminal.
 			try
 			{
 				// Read a single byte of data from the serial port.
 				serial_port.ReadByte(data_byte, ms_timeout) ;
-				//cout << data_byte;
-				if ( data_byte == '<'){
+                //cout << data_byte;
+
+                //if (data_byte >= ACK){
+                    if (data_byte == ACK && waitingFroResponse){
+                        waitingFroResponse = false;
+                         cout << "ACK" << endl;
+                         return;
+                    }
+                   // parseByteFunct(data_byte);
+                //}
+
+                if ( data_byte == '<'){
 					inMsg = "";
 				}else if ( data_byte == '>'){
 

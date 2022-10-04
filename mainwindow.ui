@@ -420,6 +420,23 @@ QSlider::handle:vertical {
         <enum>QFrame::Raised</enum>
        </property>
       </widget>
+      <widget class="QComboBox" name="cmbRGB_Group">
+       <property name="geometry">
+        <rect>
+         <x>740</x>
+         <y>20</y>
+         <width>141</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QComboBox QAbstractItemView {
+
+    selection-background-color: rgb(0,0,127);
+    selection-color: rgb(0, 0, 0);
+}</string>
+       </property>
+      </widget>
       <zorder>brdBrightness</zorder>
       <zorder>brdDaylight</zorder>
       <zorder>brdTungsten</zorder>
@@ -432,6 +449,7 @@ QSlider::handle:vertical {
       <zorder>sldTungsten</zorder>
       <zorder>sldDaylight</zorder>
       <zorder>sldBrightness</zorder>
+      <zorder>cmbRGB_Group</zorder>
      </widget>
      <widget class="QWidget" name="tabHSV">
       <attribute name="title">
