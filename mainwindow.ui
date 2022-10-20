@@ -85,7 +85,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="iconSize">
       <size>
@@ -1048,6 +1048,42 @@ QSlider::handle:vertical {
       <zorder>sldEndSat</zorder>
       <zorder>sldEndVal</zorder>
       <zorder>frameGradient</zorder>
+     </widget>
+     <widget class="QWidget" name="tabGroups">
+      <attribute name="title">
+       <string>Groups</string>
+      </attribute>
+      <widget class="QTableWidget" name="tblGroups">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>40</y>
+         <width>661</width>
+         <height>301</height>
+        </rect>
+       </property>
+       <property name="columnCount">
+        <number>5</number>
+       </property>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+       <column/>
+      </widget>
+      <widget class="QPushButton" name="btnAddGroup">
+       <property name="geometry">
+        <rect>
+         <x>720</x>
+         <y>50</y>
+         <width>89</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Add Group</string>
+       </property>
+      </widget>
      </widget>
     </widget>
    </widget>

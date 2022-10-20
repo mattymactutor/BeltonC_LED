@@ -10,6 +10,7 @@
 #include <cstring>
 #include <iostream>
 #include <unistd.h>
+#include <QElapsedTimer>
 
 using namespace LibSerial ;
 using namespace std;
@@ -27,6 +28,7 @@ private:
     void (* parseFunct)(string);
     void (* parseByteFunct)(unsigned char);
     unsigned char ACK = 128;
+    QElapsedTimer timer;
 	
 	
 public:
@@ -110,7 +112,11 @@ public:
 				
 				// Set the number of stop bits.
 				serial_port.SetStopBits(StopBits::STOP_BITS_1) ;
-				listen();			
+
+                serial_port.SetSerialPortBlockingStatus(true);
+
+                //----TURN OFF LISTEN TO TRY TO WAIT FOR A MSG TO COME BACK WHEN YOU SEND
+                //listen();
 				return true;
 				
 			}
@@ -118,13 +124,13 @@ public:
 			{
                 std::cerr << "NOT CONNECTED TO ARDUINO..trying on " << port << std::endl ;
 				isOpen = false;
-				usleep(200*2000);
+                usleep(500*1000);
 				return false;
 				
 			} catch(LibSerial::NotOpen const &){
                 std::cerr << "NOT CONNECTED TO ARDUINO..trying on " << port << std::endl ;
 				isOpen = false;
-				usleep(200*2000);
+                usleep(500*1000);
 				return false;
 			}
 		
@@ -136,16 +142,56 @@ public:
 	void sendMsg(string cmd){
          waitingFroResponse = true;
 		string sen = "<" + cmd + ">";
+
+        timer.start();
 		if (serial_port.IsOpen()){
-			serial_port.Write(sen);
+            /*for(int i =0; i < cmd.length(); i++){
+                serial_port.WriteByte(sen[i]);
+            }*/
+            serial_port.Write(sen);
+            serial_port.DrainWriteBuffer(); //
 			cout << "Sent to FootPedal: " << sen << endl;
 		} else {
 			cout << "Serial Closed, Did Not Send: " << sen << endl;
 		}
 
-        while (waitingFroResponse){
-            ;;
+        while(serial_port.IsDataAvailable() == 0){
+            if (timer.elapsed() > 250){
+                serial_port.Write(sen);
+                serial_port.DrainWriteBuffer();
+                cout << "RESEND to FootPedal: " << sen << endl;
+                timer.start();
+            }
         }
+        unsigned char data_byte;
+        size_t ms_timeout = 1000;
+        //cout << "Incoming: ";
+        while(serial_port.GetNumberOfBytesAvailable() > 0){
+
+            serial_port.ReadByte(data_byte, ms_timeout) ;
+            //cout << data_byte;
+            //cout << serial_port.GetNumberOfBytesAvailable() << "bytes left to read..." << endl;
+            if ( data_byte == '<'){
+                inMsg = "";
+                //cout << "New msg" << endl;
+            }else if ( data_byte == '>'){
+
+                if (inMsg == "!"){
+                    waitingFroResponse = false;
+                    cout << "ACK" << endl;
+                } else {
+                    parseFunct(inMsg);
+                }
+
+               // }
+            } else {
+                inMsg += data_byte;
+            }
+        }
+        //cout << endl;
+
+
+
 	}
 	
 	void close(){
@@ -191,11 +237,11 @@ public:
                 //cout << data_byte;
 
                 //if (data_byte >= ACK){
-                    if (data_byte == ACK && waitingFroResponse){
+                   /* if (data_byte == ACK && waitingFroResponse){
                         waitingFroResponse = false;
                          cout << "ACK" << endl;
                          return;
-                    }
+                    }*/
                    // parseByteFunct(data_byte);
                 //}
 
@@ -203,13 +249,19 @@ public:
 					inMsg = "";
 				}else if ( data_byte == '>'){
 
-                    waitingFroResponse = false;
+                    //waitingFroResponse = false;
 					//parseUSBCommand(inMsg);
                     /*cout << inMsg << endl;
                     if (inMsg == "ready"){
                         isConnected = true;
                     } else {*/
+                    if (inMsg == "!"){
+                        waitingFroResponse = false;
+                        cout << "ACK" << endl;
+                        return;
+                    } else {
                         parseFunct(inMsg);
+                    }
 
                    // }
 				} else {

@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QComboBox>
+#include <QPushButton>
 #include <QSlider>
 #include <string>
 #include "Serial_Comm_Footpedal.h"
@@ -15,11 +17,13 @@ QT_END_NAMESPACE
 struct Group
 {
 public:
+  QString name;
   int startLED;
   int stopLED;
   int type;
   int r, g, b, d, t, B;
   int sh, ss, sv, eh, es, ev;
+
 };
 
 //make a strucutre to keep track of the settings
@@ -50,12 +54,17 @@ private:
     double lastArduinoSend = 0;
     void loadDataFromFile();
     void saveDataToFile();
+    void loadGroupsFromFile();
+    void saveGroupsToFile();
     void sendInitData(int idx);
     void sendArduinoCmd(QString in);
     void sendGroupInfo(int groupIdx, Group g);
     void loadSliders(int idx);
     void loadGroupToSliders(Group g);
     void setSliderSilent(QSlider * qs, int val);
+    void showGroups();
+    QComboBox * createGroupCombo(int row, int idx);
+    QPushButton * createGroupEditButton(int row);
    // void parseUSBCmd(string in);
 
 
@@ -78,5 +87,7 @@ private slots:
        void on_sldEndVal_valueChanged(int value);
        void on_tabWidget_tabBarClicked(int index);
        void on_cmbRGB_Group_currentIndexChanged(int index);
+       void on_btnAddGroup_clicked();
+       void on_tblGroups_cellChanged(int row, int column);
 };
 #endif // MAINWINDOW_H
