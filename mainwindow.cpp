@@ -1157,8 +1157,11 @@ void MainWindow::loadGroupsFromFile(){
     ifstream infile(FILENAME_GROUPS.toStdString().c_str());
     if (!infile.is_open()){
         //TODO make this a message box
-        cout << "Created new settings file!" <<endl;
+        cout << "Created new groups file!" <<endl;
         saveGroupsToFile();
+        //reopen and load
+        loadGroupsFromFile();
+        return;
     }
 
     int NUM_GROUPS;
