@@ -1158,9 +1158,7 @@ void MainWindow::loadGroupsFromFile(){
     if (!infile.is_open()){
         //TODO make this a message box
         cout << "Created new groups file!" <<endl;
-        saveGroupsToFile();
-        //reopen and load
-        loadGroupsFromFile();
+        saveGroupsToFile();        
         return;
     }
 
@@ -1202,7 +1200,7 @@ void MainWindow::saveGroupsToFile(){
     }
 
     if (groups.size() == 0){
-        outfile << 0 << endl;
+        outfile << 0;
         outfile.close();
         return;
     }
