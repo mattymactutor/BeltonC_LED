@@ -10,7 +10,10 @@ chmod -R 755 LCD-show
 cd LCD-show/
 sudo ./LCD5-show
 ```
-
+-After installation restart the pi
+```
+sudo reboot now
+```
 ## Compile the GUI
 -Install qt files on RPI
 
