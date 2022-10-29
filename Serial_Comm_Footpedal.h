@@ -154,12 +154,16 @@ public:
 		} else {
 			cout << "Serial Closed, Did Not Send: " << sen << endl;
 		}
-
-        while(serial_port.IsDataAvailable() == 0){
+        int numResends = 0;
+        while(serial_port.IsDataAvailable() == 0 && numResends <= 8 ){
             if (timer.elapsed() > 250){
                 serial_port.Write(sen);
                 serial_port.DrainWriteBuffer();
                 cout << "RESEND to FootPedal: " << sen << endl;
+                numResends++;
+                if (numResends == 8){
+                    cout << "Failed to send 8 messages!" << endl;
+                }
                 timer.start();
             }
         }

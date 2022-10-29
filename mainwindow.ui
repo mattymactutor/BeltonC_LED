@@ -64,7 +64,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="iconSize">
       <size>
@@ -399,7 +399,7 @@ QSlider::handle:vertical {
         <enum>QFrame::Raised</enum>
        </property>
       </widget>
-      <widget class="QComboBox" name="cmbRGB_Group">
+      <widget class="QComboBox" name="cmbRGB_Groups">
        <property name="geometry">
         <rect>
          <x>490</x>
@@ -428,7 +428,7 @@ QSlider::handle:vertical {
       <zorder>sldTungsten</zorder>
       <zorder>sldDaylight</zorder>
       <zorder>sldBrightness</zorder>
-      <zorder>cmbRGB_Group</zorder>
+      <zorder>cmbRGB_Groups</zorder>
      </widget>
      <widget class="QWidget" name="tabHSV">
       <attribute name="title">
@@ -1113,6 +1113,34 @@ QSlider::handle:vertical {
     </property>
     <property name="text">
      <string>Close</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblNumLeds">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>0</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Num LEDs:</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="edtNumLeds">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>0</y>
+      <width>104</width>
+      <height>31</height>
+     </rect>
     </property>
    </widget>
   </widget>

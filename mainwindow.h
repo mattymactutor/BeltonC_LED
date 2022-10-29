@@ -58,11 +58,14 @@ private:
     void saveGroupsToFile();
     void sendInitData(int idx);
     void sendArduinoCmd(QString in);
-    void sendGroupInfo(int groupIdx, Group g);
+    void sendGroupInfo(QString name);
     void loadSliders(int idx);
-    void loadGroupToSliders(Group g);
+    void loadGroupToSliders(QString);
     void setSliderSilent(QSlider * qs, int val);
     void showGroups();
+    void comboBoxChanged(int idx);
+    Group * getGroupFromName(QString name, int * idx = nullptr);
+    void processSliderChange(int value, int * configVal, int * groupVal, QString groupName, QString arduinoCmd,bool hsvConvert = false);
     QComboBox * createGroupCombo(int row, int idx);
     QPushButton * createGroupEditButton(int row);
    // void parseUSBCmd(string in);
@@ -86,8 +89,11 @@ private slots:
        void on_sldEndSat_valueChanged(int value);
        void on_sldEndVal_valueChanged(int value);
        void on_tabWidget_tabBarClicked(int index);
-       void on_cmbRGB_Group_currentIndexChanged(int index);
        void on_btnAddGroup_clicked();
        void on_tblGroups_cellChanged(int row, int column);
+       void on_cmbRGB_Groups_currentIndexChanged(int index);
+       void on_cmbHSV_Groups_currentIndexChanged(int index);
+       void on_cmbGradient_Groups_currentIndexChanged(int index);
+       void on_edtNumLeds_textChanged();
 };
 #endif // MAINWINDOW_H

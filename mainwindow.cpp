@@ -12,12 +12,9 @@ using namespace std;
 
 /*
  * TODO FUTURE
-Editing groups doesn't work, when you edit you shoudl send a command? the arduino needs to release those group LEDs back to the master
-
 
 Groups need active boolean check mark
-On each page only show the groups for that page
-Only change groups on the groups
+
  *
  *
  * TODO OFFLINE
@@ -116,7 +113,6 @@ void selectSlider(int sld){
     borders[config.mode][sld]->setStyleSheet(STYLE_SELECTED_BORDER);
 }
 
-
 unsigned char ENC_CW = 129;
 #define ENC_CCW 130
 #define ENC_PUSH 131
@@ -140,8 +136,7 @@ void parseByteFunct(unsigned char in){
 }
 
 void parseUSBCmd(string in){
-    cout << "USB IN: " << in << endl;
-
+    cout << "USB IN: " << in << endl;    
     if (in == "ready"){
         arduino->setConnected(true);
         cout << "Arduino is live" << endl;
@@ -191,8 +186,6 @@ void appendNum(QString& data, int n){
        data.append("," + QString::number(n));
     }
 }
-
-
 //create a combo box for row of groups
 QComboBox * MainWindow::createGroupCombo(int row,int idx){
     QComboBox * cmbMode = new QComboBox();
@@ -201,12 +194,13 @@ QComboBox * MainWindow::createGroupCombo(int row,int idx){
 
     cmbMode->setStyleSheet("QComboBox QAbstractItemView { selection-background-color: rgb(0,0,127); selection-color: rgb(0, 0, 0); }");
     //connect the combo box to a lambda right here for the index changed
-   /* connect(cmbMode, &QComboBox::currentIndexChanged, [this,row]( int idx){
+    connect(cmbMode, &QComboBox::currentIndexChanged, [this,row]( int idx){
         cout << "Combo Box Changed on row " << row << endl;
         groups[row].type = idx;
         //TODO SAVE TO FILE WHEN THE MODE CHANGES
         saveGroupsToFile();
-    });*/
+        showGroups();
+    });
     return cmbMode;
 }
 
@@ -219,10 +213,30 @@ QPushButton * MainWindow::createGroupEditButton(int row){
         if (groups[row].type == MODE_RGB){
             ui->tabWidget->setCurrentIndex(MODE_RGB);
             //select the right group in the combo box
-            for(int i = 0; i < ui->cmbRGB_Group->count(); i++){
-                cout << ui->cmbRGB_Group->itemText(i).toStdString() << endl;
-                if (ui->cmbRGB_Group->itemText(i) == groups[row].name){
-                    ui->cmbRGB_Group->setCurrentIndex(i);
+            for(int i = 0; i < ui->cmbRGB_Groups->count(); i++){
+                cout << ui->cmbRGB_Groups->itemText(i).toStdString() << endl;
+                if (ui->cmbRGB_Groups->itemText(i) == groups[row].name){
+                    ui->cmbRGB_Groups->setCurrentIndex(i);
+                    break;
+                }
+            }
+        } else if (groups[row].type == MODE_HSV){
+            ui->tabWidget->setCurrentIndex(MODE_HSV);
+            //select the right group in the combo box
+            for(int i = 0; i < ui->cmbHSV_Groups->count(); i++){
+                cout << ui->cmbHSV_Groups->itemText(i).toStdString() << endl;
+                if (ui->cmbHSV_Groups->itemText(i) == groups[row].name){
+                    ui->cmbHSV_Groups->setCurrentIndex(i);
+                    break;
+                }
+            }
+        } else if (groups[row].type == MODE_GRADIENT){
+            ui->tabWidget->setCurrentIndex(MODE_GRADIENT);
+            //select the right group in the combo box
+            for(int i = 0; i < ui->cmbGradient_Groups->count(); i++){
+                cout << ui->cmbGradient_Groups->itemText(i).toStdString() << endl;
+                if (ui->cmbGradient_Groups->itemText(i) == groups[row].name){
+                    ui->cmbGradient_Groups->setCurrentIndex(i);
                     break;
                 }
             }
@@ -241,12 +255,16 @@ QPushButton * MainWindow::createGroupEditButton(int row){
 #define COL_STOPLED 2
 #define COL_MODE 3
 #define COL_EDITBTN 4
+//show the groups in the table on the GROUPS page
 void MainWindow::showGroups(){
 
     //clear the current list
     ui->tblGroups->model()->removeRows(0, ui2->tblGroups->rowCount());
 
     groupsRGB.clear(); groupsRGB.append("MASTER");
+    groupsHSV.clear(); groupsHSV.append("MASTER");
+    groupsGradient.clear(); groupsGradient.append("MASTER");
+
     for(int i = 0; i < groups.size(); i++){
         //make a row in the table
         ui->tblGroups->insertRow(i);
@@ -261,12 +279,17 @@ void MainWindow::showGroups(){
 
         if (cur.type == MODE_RGB){
            groupsRGB.append(cur.name);
-        }
+        } else if (cur.type == MODE_HSV){
+            groupsHSV.append(cur.name);
+         } else if (cur.type == MODE_GRADIENT){
+            groupsGradient.append(cur.name);
+         }
     }
 
     //fill the combo boxes with the correct groups
-    ui->cmbRGB_Group->setModel( new QStringListModel(groupsRGB));
-
+    ui->cmbRGB_Groups->setModel( new QStringListModel(groupsRGB));
+    ui->cmbHSV_Groups->setModel( new QStringListModel(groupsHSV));
+    ui->cmbGradient_Groups->setModel( new QStringListModel(groupsGradient));
 
 }
 
@@ -356,24 +379,9 @@ MainWindow::MainWindow(QWidget *parent)
     //You should only show groups that have been flagged with this type,
     //To change the group type you'd go to the group page
     groupsRGB.append("MASTER");
-
-
-    //make a test group
-   /* Group g1;
-    g1.type = MODE_RGB;
-    g1.startLED = 0;
-    g1.stopLED = 3;
-    g1.r = 255;
-    g1.g = 0;
-    g1.b = 0;
-    g1.d = 0;
-    g1.t = 0;
-    g1.B = 100;
-    g1.name = "Group 1";
-    groups.append(g1);
-    ui->cmbRGB_Group->addItem("Group 1");
-*/
-
+    groupsHSV.append("MASTER");
+    groupsGradient.append("MASTER");
+\
     //set header list
     ui->tblGroups->setHorizontalHeaderItem(COL_NAME, new QTableWidgetItem("Name"));
     ui->tblGroups->setHorizontalHeaderItem(COL_STARTLED, new QTableWidgetItem("Start LED"));
@@ -385,18 +393,11 @@ MainWindow::MainWindow(QWidget *parent)
     showGroups();
 
 
-
-
     //send the group info to the arduino
     for(int i = 0; i < groups.size(); i++){
-        sendGroupInfo(i, groups[i]);
+        sendGroupInfo(groups[i].name);
         usleep(20*1000);
     }
-     /*ui->sldRed->setValue(45);
-     setSliderSilent(ui->sldRed,125);
-     changeBackgroundOfRGBSlider(ui->sldRed, 255,0,0,125/255.0);
-     cout << "STOP EARLY" << endl;*/
-
 
 }
 
@@ -455,57 +456,55 @@ void MainWindow::sendInitData(int idx){
 //call this after everything has been drawn
 void MainWindow::loadSliders(int idx){
 
-    if (idx == MODE_RGB){
-    //move all sliders down and show no background
-    changeBackgroundOfRGBSlider(ui->sldRed, 255,0,0, config.r / 255.0);
-    changeBackgroundOfRGBSlider(ui->sldGreen,0,255,0, config.g / 255.0);
-    changeBackgroundOfRGBSlider(ui->sldBlue, 0,0,255, config.b / 255.0);
-    changeBackgroundOfRGBSlider(ui->sldDaylight, 198, 243, 255, config.t / 255.0);
-    changeBackgroundOfRGBSlider(ui->sldTungsten, 255,212,125 , config.d / 255.0);
-    changeBackgroundOfRGBSlider(ui->sldBrightness,194,194,194, config.B / 255.0);
-    setSliderSilent(ui->sldRed, config.r);
-    setSliderSilent(ui->sldGreen,config.g);
-    setSliderSilent(ui->sldBlue,config.b);
-    setSliderSilent(ui->sldDaylight,config.d);
-    setSliderSilent(ui->sldTungsten,config.t);
-    setSliderSilent(ui->sldBrightness,config.B);
-    } else  if (idx == MODE_HSV){
+    if (config.mode == MODE_RGB){
+        //move all sliders down and show no background
+        changeBackgroundOfRGBSlider(ui->sldRed, 255,0,0, config.r / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldGreen,0,255,0, config.g / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldBlue, 0,0,255, config.b / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldDaylight, 198, 243, 255, config.t / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldTungsten, 255,212,125 , config.d / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldBrightness,194,194,194, config.B / 255.0);
+        setSliderSilent(ui->sldRed, config.r);
+        setSliderSilent(ui->sldGreen,config.g);
+        setSliderSilent(ui->sldBlue,config.b);
+        setSliderSilent(ui->sldDaylight,config.d);
+        setSliderSilent(ui->sldTungsten,config.t);
+        setSliderSilent(ui->sldBrightness,config.B);
+    } else  if (config.mode  == MODE_HSV){
+        //hsv
+        //QTCreator is 0 to 359 but arduino is 0 to 254
+        double zeroTo1 = config.h / 255.0;
+        int value = (int)(zeroTo1 * 359.0);
+        setSliderSilent(ui->sldHue,value);
+        setSliderSilent(ui->sldSat,config.s);
+        setSliderSilent(ui->sldVal,config.v);
+        changeBackgroundOfHSVSlider(ui->sldHue, value,180,255);
+        changeBackgroundOfHSVSlider(ui->sldSat, value,config.s,255);
+        changeBackgroundOfHSVSlider(ui->sldVal,value,config.s,config.v);
 
+    } else  if (config.mode  == MODE_GRADIENT){
 
-    //hsv
-    //QTCreator is 0 to 359 but arduino is 0 to 254
-    double zeroTo1 = config.h / 255.0;
-    int value = (int)(zeroTo1 * 359.0);
-    setSliderSilent(ui->sldHue,value);
-    setSliderSilent(ui->sldSat,config.s);
-    setSliderSilent(ui->sldVal,config.v);
-    changeBackgroundOfHSVSlider(ui->sldHue, value,180,255);
-    changeBackgroundOfHSVSlider(ui->sldSat, value,config.s,255);
-    changeBackgroundOfHSVSlider(ui->sldVal,value,config.s,config.v);
-
-    } else  if (idx == MODE_GRADIENT){
-
-    //gradient
+        //gradient
         //convert the hue
         double zeroTo1 = config.sh / 255.0;
         int value = (int)(zeroTo1 * 359.0);
-    setSliderSilent(ui->sldStartHue,value);
-    setSliderSilent(ui->sldStartSat,config.ss);
-    setSliderSilent(ui->sldStartVal,config.sv);
-    changeBackgroundOfHSVSlider(ui->sldStartHue, value,180,255);
-    changeBackgroundOfHSVSlider(ui->sldStartSat, value,config.ss,255);
-    changeBackgroundOfHSVSlider(ui->sldStartVal, value, config.ss, config.sv);
+        setSliderSilent(ui->sldStartHue,value);
+        setSliderSilent(ui->sldStartSat,config.ss);
+        setSliderSilent(ui->sldStartVal,config.sv);
+        changeBackgroundOfHSVSlider(ui->sldStartHue, value,180,255);
+        changeBackgroundOfHSVSlider(ui->sldStartSat, value,config.ss,255);
+        changeBackgroundOfHSVSlider(ui->sldStartVal, value, config.ss, config.sv);
 
-    zeroTo1 = config.eh / 255.0;
-    value = (int)(zeroTo1 * 359.0);
-    setSliderSilent(ui->sldEndHue,value);
-    setSliderSilent(ui->sldEndSat,config.es);
-    setSliderSilent(ui->sldEndVal,config.sv);
-    changeBackgroundOfHSVSlider(ui->sldEndHue, value,180,255);
-    changeBackgroundOfHSVSlider(ui->sldEndSat, value,config.es,255);
-    changeBackgroundOfHSVSlider(ui->sldEndVal,value,config.es,config.ev);
+        zeroTo1 = config.eh / 255.0;
+        value = (int)(zeroTo1 * 359.0);
+        setSliderSilent(ui->sldEndHue,value);
+        setSliderSilent(ui->sldEndSat,config.es);
+        setSliderSilent(ui->sldEndVal,config.sv);
+        changeBackgroundOfHSVSlider(ui->sldEndHue, value,180,255);
+        changeBackgroundOfHSVSlider(ui->sldEndSat, value,config.es,255);
+        changeBackgroundOfHSVSlider(ui->sldEndVal,value,config.es,config.ev);
 
-    changeGradientStyleBasedOnSliders(ui);
+        changeGradientStyleBasedOnSliders(ui);
     }
 
    // sendArduinoCmd("lastload");
@@ -515,7 +514,8 @@ void MainWindow::loadSliders(int idx){
 void MainWindow::parseArduinoCmd(string in){
 
      cout << "USB IN: " << in << endl;
-     
+     ui->lblIncMsg->setText(QString::fromStdString(in));
+
         if (in == "ready"){
             isArduinoConnected = true;
            // loadSliders();
@@ -586,6 +586,59 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+Group * MainWindow::getGroupFromName(QString name, int * idx){
+
+    if (name == "MASTER"){
+        return nullptr;
+    }
+
+    //find the group in the list, assume all groups are unique names
+    for(int i = 0; i < groups.size(); i++){
+        if (groups[i].name == name){
+            if (idx != nullptr){
+                *idx = i;
+            }
+             return &groups[i];
+        }
+    }
+
+    cout << "Could not find the group you are trying to load to slider: " << name.toStdString() <<endl;
+    return nullptr;
+
+}
+
+void MainWindow::processSliderChange(int value, int * configVal, int * groupVal, QString groupName, QString arduinoCmd, bool hsvConvert){
+
+    if (hsvConvert){
+        //QTCreator is 0 to 359 but arduino is 0 to 254
+        double zeroTo1 = value / 359.0;
+        value = (int)(zeroTo1 * 254);
+    }
+
+    //if master group check if it changed enough
+    if (groupName == "MASTER"){
+        //check if we've moved the slider enough to send the new data
+        if (abs(*configVal - value) > SLD_CHANGE_THRESHOLD )
+        {
+                *configVal = value;
+                saveDataToFile();
+                QString msg = arduinoCmd + QString::number(value);
+                sendArduinoCmd(msg);
+        }
+
+    }
+    //check if the slider changed this much for this group
+    else {
+
+        if (abs(*groupVal - value) > SLD_CHANGE_THRESHOLD )
+        {
+            *groupVal = value;
+            saveGroupsToFile();
+            sendGroupInfo(groupName);
+        }
+    }
+}
+
 void MainWindow::on_sldRed_valueChanged(int value)
 {
     //turn the value into a valid Arduino command
@@ -601,32 +654,12 @@ void MainWindow::on_sldRed_valueChanged(int value)
    }
 
     //on load this can get called before the view is loaded which gives -1 at the index
-    int groupIdx = ui->cmbRGB_Group->currentIndex();
+    int groupIdx = ui->cmbRGB_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    //if master group check if it changed enough
-    if (groupIdx == 0){
-        //check if we've moved the slider enough to send the new data
-        if (abs(config.r - value) > SLD_CHANGE_THRESHOLD )
-        {
-                config.r = value;
-                saveDataToFile();
-                QString msg = "r:" + QString::number(value);
-                sendArduinoCmd(msg);
-        }
 
-    }
-    //check if the slider changed this much for this group
-    else {
-        groupIdx -= 1;
-        if (abs(groups[groupIdx].r - value) > SLD_CHANGE_THRESHOLD )
-        {
-            groups[groupIdx].r = value;
-            saveGroupsToFile();
-            sendGroupInfo(groupIdx,groups[groupIdx]);
-        }
-    }
+    processSliderChange(value, &config.r, &getGroupFromName(groupsRGB[groupIdx])->r, groupIdx == 0 ? "MASTER" : groupsRGB[groupIdx], "r:");
 }
 
 void MainWindow::on_sldGreen_valueChanged(int value)
@@ -642,32 +675,11 @@ void MainWindow::on_sldGreen_valueChanged(int value)
        selectSlider(curSelection);
    }
     //on load this can get called before the view is loaded which gives -1 at the index
-    int groupIdx = ui->cmbRGB_Group->currentIndex();
+    int groupIdx = ui->cmbRGB_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    //if master group check if it changed enough
-    if (groupIdx == 0){
-        //check if we've moved the slider enough to send the new data
-        if (abs(config.g - value) > SLD_CHANGE_THRESHOLD )
-        {
-                config.g = value;
-                saveDataToFile();
-                QString msg = "g:" + QString::number(value);
-                sendArduinoCmd(msg);
-        }
-
-    }
-    //check if the slider changed this much for this group
-    else {
-        groupIdx -= 1;
-        if (abs(groups[groupIdx].g - value) > SLD_CHANGE_THRESHOLD )
-        {
-            groups[groupIdx].g = value;
-            saveGroupsToFile();
-            sendGroupInfo(groupIdx,groups[groupIdx]);
-        }
-    }
+    processSliderChange(value, &config.g, &getGroupFromName(groupsRGB[groupIdx])->g, groupIdx == 0 ? "MASTER" : groupsRGB[groupIdx] , "g:");
 }
 
 void MainWindow::on_sldBlue_valueChanged(int value)
@@ -684,32 +696,13 @@ void MainWindow::on_sldBlue_valueChanged(int value)
    }
 
     //on load this can get called before the view is loaded which gives -1 at the index
-    int groupIdx = ui->cmbRGB_Group->currentIndex();
+    int groupIdx = ui->cmbRGB_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
+    processSliderChange(value, &config.b, &getGroupFromName(groupsRGB[groupIdx])->b, groupIdx == 0 ? "MASTER" : groupsRGB[groupIdx] , "b:");
     //if master group check if it changed enough
-    if (groupIdx == 0){
-        //check if we've moved the slider enough to send the new data
-        if (abs(config.b - value) > SLD_CHANGE_THRESHOLD )
-        {
-                config.b = value;
-                saveDataToFile();
-                QString msg = "b:" + QString::number(value);
-                sendArduinoCmd(msg);
-        }
 
-    }
-    //check if the slider changed this much for this group
-    else {
-        groupIdx -= 1;
-        if (abs(groups[groupIdx].b - value) > SLD_CHANGE_THRESHOLD )
-        {
-            groups[groupIdx].b = value;
-            saveGroupsToFile();
-            sendGroupInfo(groupIdx,groups[groupIdx]);
-        }
-    }
 }
 
 void MainWindow::on_sldTungsten_valueChanged(int value)
@@ -725,32 +718,12 @@ void MainWindow::on_sldTungsten_valueChanged(int value)
        selectSlider(curSelection);
    }
     //on load this can get called before the view is loaded which gives -1 at the index
-    int groupIdx = ui->cmbRGB_Group->currentIndex();
+    int groupIdx = ui->cmbRGB_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    //if master group check if it changed enough
-    if (groupIdx == 0){
-        //check if we've moved the slider enough to send the new data
-        if (abs(config.t - value) > SLD_CHANGE_THRESHOLD )
-        {
-                config.t = value;
-                saveDataToFile();
-                QString msg = "t:" + QString::number(value);
-                sendArduinoCmd(msg);
-        }
+    processSliderChange(value, &config.d, &getGroupFromName(groupsRGB[groupIdx])->d, groupIdx == 0 ? "MASTER" : groupsRGB[groupIdx] , "d:");
 
-    }
-    //check if the slider changed this much for this group
-    else {
-        groupIdx -= 1;
-        if (abs(groups[groupIdx].t - value) > SLD_CHANGE_THRESHOLD )
-        {
-            groups[groupIdx].t = value;
-            saveGroupsToFile();
-            sendGroupInfo(groupIdx,groups[groupIdx]);
-        }
-    }
 }
 
 void MainWindow::on_sldDaylight_valueChanged(int value)
@@ -767,32 +740,11 @@ void MainWindow::on_sldDaylight_valueChanged(int value)
    }
 
     //on load this can get called before the view is loaded which gives -1 at the index
-    int groupIdx = ui->cmbRGB_Group->currentIndex();
+    int groupIdx = ui->cmbRGB_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    //if master group check if it changed enough
-    if (groupIdx == 0){
-        //check if we've moved the slider enough to send the new data
-        if (abs(config.d - value) > SLD_CHANGE_THRESHOLD )
-        {
-                config.d = value;
-                saveDataToFile();
-                QString msg = "d:" + QString::number(value);
-                sendArduinoCmd(msg);
-        }
-
-    }
-    //check if the slider changed this much for this group
-    else {
-        groupIdx -= 1;
-        if (abs(groups[groupIdx].d - value) > SLD_CHANGE_THRESHOLD )
-        {
-            groups[groupIdx].d = value;
-            saveGroupsToFile();
-            sendGroupInfo(groupIdx,groups[groupIdx]);
-        }
-    }
+    processSliderChange(value, &config.t, &getGroupFromName(groupsRGB[groupIdx])->t, groupIdx == 0 ? "MASTER" : groupsRGB[groupIdx] , "t:");
 
 }
 
@@ -810,32 +762,12 @@ void MainWindow::on_sldBrightness_valueChanged(int value)
    }
 
     //on load this can get called before the view is loaded which gives -1 at the index
-    int groupIdx = ui->cmbRGB_Group->currentIndex();
+    int groupIdx = ui->cmbRGB_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    //if master group check if it changed enough
-    if (groupIdx == 0){
-        //check if we've moved the slider enough to send the new data
-        if (abs(config.B - value) > SLD_CHANGE_THRESHOLD )
-        {
-                config.B = value;
-                saveDataToFile();
-                QString msg = "B:" + QString::number(value);
-                sendArduinoCmd(msg);
-        }
+    processSliderChange(value, &config.B, &getGroupFromName(groupsRGB[groupIdx])->B, groupIdx == 0 ? "MASTER" : groupsRGB[groupIdx] , "B:");
 
-    }
-    //check if the slider changed this much for this group
-    else {
-        groupIdx -= 1;
-        if (abs(groups[groupIdx].B - value) > SLD_CHANGE_THRESHOLD )
-        {
-            groups[groupIdx].B = value;
-            saveGroupsToFile();
-            sendGroupInfo(groupIdx,groups[groupIdx]);
-        }
-    }
 }
 
 void changeBackgroundOfHSVSlider(QSlider * sld,int h, int s, int v){
@@ -899,18 +831,25 @@ void MainWindow::on_sldHue_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldSat, value,ui->sldSat->value(),255);
     changeBackgroundOfHSVSlider(ui->sldVal, value,ui->sldSat->value(),ui->sldVal->value());
 
+    //on load this can get called before the view is loaded which gives -1 at the index
+    int groupIdx = ui->cmbHSV_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.h, &getGroupFromName(groupsHSV[groupIdx])->sh, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "h:", true);
 
-    if (abs(config.h - value) > SLD_CHANGE_THRESHOLD )
+
+    /*if (abs(config.h - value) > SLD_CHANGE_THRESHOLD )
     {
         //QTCreator is 0 to 359 but arduino is 0 to 254
         double zeroTo1 = value / 359.0;
         value = (int)(zeroTo1 * 254);
-    QString msg = "h:" + QString::number(value);
-    sendArduinoCmd(msg);
-    config.h = value;
-    saveDataToFile();
-    cout << "SLIDER HUE CHANGED" << endl;
-    }
+        QString msg = "h:" + QString::number(value);
+        sendArduinoCmd(msg);
+        config.h = value;
+        saveDataToFile();
+        //cout << "SLIDER HUE CHANGED" << endl;
+    }*/
 
 
 }
@@ -926,13 +865,20 @@ void MainWindow::on_sldSat_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldSat, ui->sldHue->value(),value,255);
     changeBackgroundOfHSVSlider(ui->sldVal, ui->sldHue->value(),value,ui->sldVal->value());
 
-    if (abs(config.s - value) > SLD_CHANGE_THRESHOLD )
+    //on load this can get called before the view is loaded which gives -1 at the index
+    int groupIdx = ui->cmbHSV_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.s, &getGroupFromName(groupsHSV[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "s:", true);
+
+    /*if (abs(config.s - value) > SLD_CHANGE_THRESHOLD )
     {
     QString msg = "s:" + QString::number(value);
     sendArduinoCmd(msg);
     config.s = value;
     saveDataToFile();
-    }
+    }*/
 }
 
 void MainWindow::on_sldVal_valueChanged(int value)
@@ -944,13 +890,21 @@ void MainWindow::on_sldVal_valueChanged(int value)
        selectSlider(curSelection);
    }
     changeBackgroundOfHSVSlider(ui->sldVal, ui->sldHue->value(),ui->sldSat->value(),value);
-    if (abs(config.v - value) > SLD_CHANGE_THRESHOLD )
+
+    //on load this can get called before the view is loaded which gives -1 at the index
+    int groupIdx = ui->cmbHSV_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.v, &getGroupFromName(groupsHSV[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "v:", true);
+
+   /*if (abs(config.v - value) > SLD_CHANGE_THRESHOLD )
     {
     QString msg = "v:" + QString::number(value);
     sendArduinoCmd(msg);
     config.v = value;
     saveDataToFile();
-    }
+    }*/
 }
 
 void changeGradientStyleBasedOnSliders(Ui::MainWindow * ui){
@@ -979,18 +933,29 @@ void MainWindow::on_sldStartHue_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldStartHue, value,180,255);
     changeBackgroundOfHSVSlider(ui->sldStartSat, value,ui->sldStartSat->value(),255);
     changeBackgroundOfHSVSlider(ui->sldStartVal, value,ui->sldStartSat->value(),ui->sldStartVal->value());
+
+
+    //on load this can get called before the view is loaded which gives -1 at the index
+    int groupIdx = ui->cmbGradient_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.sh, &getGroupFromName(groupsGradient[groupIdx])->sh, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "sh:", true);
+
+
+
     //QTCreator is 0 to 359 but arduino is 0 to 254
-    double zeroTo1 = value / 359.0;
+   /* double zeroTo1 = value / 359.0;
     value = (int)(zeroTo1 * 254);
 
     if (abs(config.sh - value) > SLD_CHANGE_THRESHOLD )
     {
-    QString msg = "sh:" + QString::number(value);
-    sendArduinoCmd(msg);
-    changeGradientStyleBasedOnSliders(ui);
-    config.sh = value;
-    saveDataToFile();
-    }
+        QString msg = "sh:" + QString::number(value);
+        sendArduinoCmd(msg);
+        changeGradientStyleBasedOnSliders(ui);
+        config.sh = value;
+        saveDataToFile();
+    }*/
 }
 
 void MainWindow::on_sldStartSat_valueChanged(int value)
@@ -1005,14 +970,20 @@ void MainWindow::on_sldStartSat_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldStartSat, ui->sldStartHue->value(),value,255);
     changeBackgroundOfHSVSlider(ui->sldStartVal, ui->sldStartHue->value(),value,ui->sldStartVal->value());
 
-    if (abs(config.ss - value) > SLD_CHANGE_THRESHOLD )
+    int groupIdx = ui->cmbGradient_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.ss, &getGroupFromName(groupsGradient[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ss:", true);
+
+    /*if (abs(config.ss - value) > SLD_CHANGE_THRESHOLD )
     {
     QString msg = "ss:" + QString::number(value);
     sendArduinoCmd(msg);
     changeGradientStyleBasedOnSliders(ui);
     config.ss = value;
     saveDataToFile();
-    }
+    }*/
 }
 
 void MainWindow::on_sldStartVal_valueChanged(int value)
@@ -1025,14 +996,20 @@ void MainWindow::on_sldStartVal_valueChanged(int value)
    }
     changeBackgroundOfHSVSlider(ui->sldStartVal, ui->sldStartHue->value(),ui->sldStartSat->value(),value);
 
-    if (abs(config.sv - value) > SLD_CHANGE_THRESHOLD )
+    int groupIdx = ui->cmbGradient_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.sv, &getGroupFromName(groupsGradient[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "sv:", true);
+
+   /* if (abs(config.sv - value) > SLD_CHANGE_THRESHOLD )
     {
         QString msg = "sv:" + QString::number(value);
         sendArduinoCmd(msg);
         changeGradientStyleBasedOnSliders(ui);
         config.sv = value;
         saveDataToFile();
-    }
+    }*/
 }
 
 void MainWindow::on_sldEndHue_valueChanged(int value)
@@ -1048,8 +1025,15 @@ void MainWindow::on_sldEndHue_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldEndSat, value,ui->sldEndSat->value(),255);
     changeBackgroundOfHSVSlider(ui->sldEndVal, value,ui->sldEndSat->value(),ui->sldEndVal->value());
 
+
+    int groupIdx = ui->cmbGradient_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.eh, &getGroupFromName(groupsGradient[groupIdx])->eh, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "eh:", true);
+
     //QTCreator is 0 to 359 but arduino is 0 to 254
-    double zeroTo1 = value / 359.0;
+    /*double zeroTo1 = value / 359.0;
     value = (int)(zeroTo1 * 254);
     if (abs(config.eh - value) > SLD_CHANGE_THRESHOLD )
     {
@@ -1058,7 +1042,7 @@ void MainWindow::on_sldEndHue_valueChanged(int value)
         changeGradientStyleBasedOnSliders(ui);
         config.eh = value;
         saveDataToFile();
-    }
+    }*/
 }
 
 void MainWindow::on_sldEndSat_valueChanged(int value)
@@ -1072,14 +1056,20 @@ void MainWindow::on_sldEndSat_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldEndSat, ui->sldEndHue->value(),value,255);
     changeBackgroundOfHSVSlider(ui->sldEndVal, ui->sldEndHue->value(),value,ui->sldEndVal->value());
 
-    if (abs(config.es - value) > SLD_CHANGE_THRESHOLD )
+    int groupIdx = ui->cmbGradient_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.es, &getGroupFromName(groupsGradient[groupIdx])->es, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "es:", true);
+
+   /* if (abs(config.es - value) > SLD_CHANGE_THRESHOLD )
     {
         QString msg = "es:" + QString::number(value);
         sendArduinoCmd(msg);
         changeGradientStyleBasedOnSliders(ui);
         config.es = value;
         saveDataToFile();
-    }
+    }*/
 }
 
 void MainWindow::on_sldEndVal_valueChanged(int value)
@@ -1092,14 +1082,20 @@ void MainWindow::on_sldEndVal_valueChanged(int value)
    }
     changeBackgroundOfHSVSlider(ui->sldEndVal, ui->sldEndHue->value(),ui->sldEndSat->value(),value);
 
-    if (abs(config.ev - value) > SLD_CHANGE_THRESHOLD )
+    int groupIdx = ui->cmbGradient_Groups->currentIndex();
+    if (groupIdx == -1){
+        return;
+    }
+    processSliderChange(value, &config.ev, &getGroupFromName(groupsGradient[groupIdx])->ev, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ev:", true);
+
+    /*if (abs(config.ev - value) > SLD_CHANGE_THRESHOLD )
     {
         QString msg = "ev:" + QString::number(value);
         sendArduinoCmd(msg);
         changeGradientStyleBasedOnSliders(ui);
         config.ev = value;
         saveDataToFile();
-    }
+    }*/
 }
 
 void MainWindow::saveDataToFile(){
@@ -1184,6 +1180,8 @@ void MainWindow::loadGroupsFromFile(){
         cout << g.t << " "<< g.B << endl;
         groups.append(g);
     }
+    //this splits the groups into individual lists too
+    showGroups();
 
 
 
@@ -1215,6 +1213,8 @@ void MainWindow::saveGroupsToFile(){
     outfile.close();
 
 
+
+
 }
 
 void MainWindow::on_tabWidget_tabBarClicked(int index)
@@ -1236,52 +1236,77 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
     //}
 }
 
-void MainWindow::on_cmbRGB_Group_currentIndexChanged(int index)
-{
-    //if it's on master then change the whole entire strip
-    if (index == 0){
-        loadSliders(0);
-    } else {
-        //Now we're in groups, but they start at index 1 and are saved as 0 index so
-        index -= 1;
-        //sendGroupInfo(index, groups[index]);
-        loadGroupToSliders(groups[index]);
+void MainWindow::loadGroupToSliders(QString name){
+
+    Group * g = getGroupFromName(name);
+
+    if (g->type == MODE_RGB){
+        changeBackgroundOfRGBSlider(ui->sldRed, 255,0,0, g->r / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldGreen,0,255,0, g->g / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldBlue, 0,0,255, g->b / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldDaylight, 198, 243, 255, g->t / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldTungsten, 255,212,125 , g->d / 255.0);
+        changeBackgroundOfRGBSlider(ui->sldBrightness,194,194,194, g->B / 255.0);
+        setSliderSilent(ui->sldRed,g->r);
+        setSliderSilent(ui->sldGreen,g->g);
+        setSliderSilent(ui->sldBlue,g->b);
+        setSliderSilent(ui->sldDaylight,g->d);
+        setSliderSilent(ui->sldTungsten,g->t);
+        setSliderSilent(ui->sldBrightness,g->B);
+    } else if (g->type == MODE_HSV){
+        changeBackgroundOfHSVSlider(ui->sldHue, g->sh,180,255);
+        changeBackgroundOfHSVSlider(ui->sldSat, g->sh,g->ss,255);
+        changeBackgroundOfHSVSlider(ui->sldVal, g->sh,g->ss,g->sv);
+        setSliderSilent(ui->sldHue,g->sh);
+        setSliderSilent(ui->sldSat,g->ss);
+        setSliderSilent(ui->sldVal,g->sv);
+    } else if (g->type == MODE_GRADIENT){
+        //set start sliders
+        changeBackgroundOfHSVSlider(ui->sldStartHue, g->sh,180,255);
+        changeBackgroundOfHSVSlider(ui->sldStartSat, g->sh,g->ss,255);
+        changeBackgroundOfHSVSlider(ui->sldStartVal, g->sh,g->ss,g->sv);
+        setSliderSilent(ui->sldStartHue,g->sh);
+        setSliderSilent(ui->sldStartSat,g->ss);
+        setSliderSilent(ui->sldStartVal,g->sv);
+        //set end sliders
+        changeBackgroundOfHSVSlider(ui->sldEndHue, g->eh,180,255);
+        changeBackgroundOfHSVSlider(ui->sldEndSat, g->eh,g->es,255);
+        changeBackgroundOfHSVSlider(ui->sldEndVal, g->eh,g->es,g->ev);
+        setSliderSilent(ui->sldEndHue,g->eh);
+        setSliderSilent(ui->sldEndSat,g->es);
+        setSliderSilent(ui->sldEndVal,g->ev);
     }
 }
 
-void MainWindow::loadGroupToSliders(Group g){
-    if (g.type == MODE_RGB){
-        changeBackgroundOfRGBSlider(ui->sldRed, 255,0,0, g.r / 255.0);
-        changeBackgroundOfRGBSlider(ui->sldGreen,0,255,0, g.g / 255.0);
-        changeBackgroundOfRGBSlider(ui->sldBlue, 0,0,255, g.b / 255.0);
-        changeBackgroundOfRGBSlider(ui->sldDaylight, 198, 243, 255, g.t / 255.0);
-        changeBackgroundOfRGBSlider(ui->sldTungsten, 255,212,125 , g.d / 255.0);
-        changeBackgroundOfRGBSlider(ui->sldBrightness,194,194,194, g.B / 255.0);
-        setSliderSilent(ui->sldRed,g.r);
-        setSliderSilent(ui->sldGreen,g.g);
-        setSliderSilent(ui->sldBlue,g.b);
-        setSliderSilent(ui->sldDaylight,g.d);
-        setSliderSilent(ui->sldTungsten,g.t);
-        setSliderSilent(ui->sldBrightness,g.B);
-    }
-}
+void MainWindow::sendGroupInfo(QString name){
 
-void MainWindow::sendGroupInfo(int groupIndex, Group g){
-    QString msg = "gr{" + QString::number(groupIndex);
-    appendNum(msg, g.type);
-    appendNum(msg, g.startLED);
-    appendNum(msg, g.stopLED);
-    if (g.type == MODE_RGB){
-        appendNum(msg,g.r);
-        appendNum(msg,g.g);
-        appendNum(msg,g.b);
-        appendNum(msg,g.d);
-        appendNum(msg,g.t);
-        appendNum(msg,g.B);
-    } else if (g.type == MODE_HSV){
-        appendNum(msg,g.sh);
-        appendNum(msg,g.ss);
-        appendNum(msg,g.sv);
+    //find the group in the list, assume all groups are unique names
+    int idx;
+    Group * g = getGroupFromName(name, &idx);
+
+
+    QString msg = "gr{" + QString::number(idx);
+    appendNum(msg, g->type);
+    appendNum(msg, g->startLED);
+    appendNum(msg, g->stopLED);
+    if (g->type == MODE_RGB){
+        appendNum(msg,g->r);
+        appendNum(msg,g->g);
+        appendNum(msg,g->b);
+        appendNum(msg,g->d);
+        appendNum(msg,g->t);
+        appendNum(msg,g->B);
+    } else if (g->type == MODE_HSV){
+        appendNum(msg,g->sh);
+        appendNum(msg,g->ss);
+        appendNum(msg,g->sv);
+    } else if (g->type == MODE_GRADIENT){
+        appendNum(msg,g->sh);
+        appendNum(msg,g->ss);
+        appendNum(msg,g->sv);
+        appendNum(msg,g->eh);
+        appendNum(msg,g->es);
+        appendNum(msg,g->ev);
     }
 
     msg += "}";
@@ -1306,7 +1331,6 @@ void MainWindow::on_btnAddGroup_clicked()
 
 }
 
-
 void MainWindow::on_tblGroups_cellChanged(int row, int column)
 {
 
@@ -1326,9 +1350,59 @@ void MainWindow::on_tblGroups_cellChanged(int row, int column)
         default:
             break;
     }
-
+    sendGroupInfo(groupToChange->name);
     saveGroupsToFile();
 
+
+}
+
+void MainWindow::on_cmbRGB_Groups_currentIndexChanged(int index)
+{
+    //if it's on master then change the whole entire strip
+    if (index == 0){
+        loadSliders(0);
+    } else {
+        loadGroupToSliders(groupsRGB[index]);
+    }
+}
+
+void MainWindow::on_cmbHSV_Groups_currentIndexChanged(int index)
+{
+    //if it's on master then change the whole entire strip
+    if (index == 0){
+        loadSliders(0);
+    } else {
+        loadGroupToSliders(groupsHSV[index]);
+    }
+}
+
+void MainWindow::on_cmbGradient_Groups_currentIndexChanged(int index)
+{
+    //if it's on master then change the whole entire strip
+    if (index == 0){
+        loadSliders(0);
+    } else {
+        loadGroupToSliders(groupsGradient[index]);
+    }
+}
+
+void MainWindow::on_edtNumLeds_textChanged()
+{
+    QString numLedsStr = ui->edtNumLeds->toPlainText();
+    if (numLedsStr.length() == 0){
+        return;
+    }
+    bool ok;
+    int numLeds = numLedsStr.toInt(&ok);
+    if (ok == false){
+        QMessageBox msgBox;
+        msgBox.setText("Please enter a number!");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+        return;
+    }
+
+    sendArduinoCmd("nl:" + QString::number(numLeds));
 
 }
 
