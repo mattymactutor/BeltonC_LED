@@ -63,7 +63,6 @@ private:
     void loadGroupToSliders(QString);
     void setSliderSilent(QSlider * qs, int val);
     void showGroups();
-    void comboBoxChanged(int idx);
     Group * getGroupFromName(QString name, int * idx = nullptr);
     void processSliderChange(int value, int * configVal, int * groupVal, QString groupName, QString arduinoCmd,bool hsvConvert = false);
     QComboBox * createGroupCombo(int row, int idx);
@@ -72,6 +71,7 @@ private:
 
 
 private slots:
+       void tableComboChanged(int idx);
        void on_btnClose_clicked();       
        void on_sldRed_valueChanged(int value);
        void on_sldGreen_valueChanged(int value);

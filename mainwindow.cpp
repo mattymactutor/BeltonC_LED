@@ -12,8 +12,9 @@ using namespace std;
 
 /*
  * TODO FUTURE
-
+num leds needs to save in the file
 Groups need active boolean check mark
+https://www.kdab.com/qt-input-method-virtual-keyboard/
 
  *
  *
@@ -186,21 +187,32 @@ void appendNum(QString& data, int n){
        data.append("," + QString::number(n));
     }
 }
-//create a combo box for row of groups
-QComboBox * MainWindow::createGroupCombo(int row,int idx){
-    QComboBox * cmbMode = new QComboBox();
-    cmbMode->addItem("RGB"); cmbMode->addItem("HSV"); cmbMode->addItem("Gradient");
-    cmbMode->setCurrentIndex(idx);
 
-    cmbMode->setStyleSheet("QComboBox QAbstractItemView { selection-background-color: rgb(0,0,127); selection-color: rgb(0, 0, 0); }");
-    //connect the combo box to a lambda right here for the index changed
-    connect(cmbMode, &QComboBox::currentIndexChanged, this, [this,row]( int idx){
+void MainWindow::tableComboChanged(int idx){
+    QComboBox * comboBox = dynamic_cast<QComboBox *>(sender());
+
+    if(comboBox)
+    {
+        int row = comboBox->itemData(0).toInt();
         cout << "Combo Box Changed on row " << row << endl;
         groups[row].type = idx;
         //TODO SAVE TO FILE WHEN THE MODE CHANGES
         saveGroupsToFile();
         showGroups();
-    });
+    }
+}
+//create a combo box for row of groups
+QComboBox * MainWindow::createGroupCombo(int row,int idx){
+    QComboBox * cmbMode = new QComboBox();
+    cmbMode->addItem("RGB"); cmbMode->addItem("HSV"); cmbMode->addItem("Gradient");
+    cmbMode->setCurrentIndex(idx);
+    //set the row of the combo box so it knows in the future
+    cmbMode->setItemData(0,row);
+
+    cmbMode->setStyleSheet("QComboBox QAbstractItemView { selection-background-color: rgb(0,0,127); selection-color: rgb(0, 0, 0); }");
+    //connect the combo box to a lambda right here for the index changed
+    connect(cmbMode, SIGNAL(currentIndexChanged(int)), this, SLOT(tableComboChanged(int)));
+    //connect(cmbMode, &QComboBox::currentIndexChanged, [row](){cout << "CMB ROW: " << row << " INDEX: " << idx << endl;});
     return cmbMode;
 }
 
@@ -1346,7 +1358,7 @@ void MainWindow::on_tblGroups_cellChanged(int row, int column)
             break;
         case COL_STOPLED:
             groupToChange->stopLED = cell->text().toInt();
-            break;
+            break;      
         default:
             break;
     }
