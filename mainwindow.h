@@ -5,6 +5,9 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QSlider>
+#include <QThread>
+#include <QCheckBox>
+#include <QStringListModel>
 #include <string>
 #include "Serial_Comm_Footpedal.h"
 
@@ -14,6 +17,9 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+#define ACTIVE 0
+#define INACTIVE 1
+#define OFF 2
 struct Group
 {
 public:
@@ -23,6 +29,7 @@ public:
   int type;
   int r, g, b, d, t, B;
   int sh, ss, sv, eh, es, ev;
+  int status;
 
 };
 
@@ -32,8 +39,8 @@ struct CONFIG{
     //rgb daylight tungsten brightness
     int r, g, b, d, t, B;
     int sh,ss,sv,eh,es,ev;
-    //possibly add ability to change the num of leds? for the gradient.
     int mode;
+    int numLEDs;
 };
 
 
@@ -52,26 +59,29 @@ public:
 private:
     Ui::MainWindow *ui;    
     double lastArduinoSend = 0;
-    void loadDataFromFile();
-    void saveDataToFile();
+    void loadConfigFromFile();
+    void saveConfigToFile();
     void loadGroupsFromFile();
     void saveGroupsToFile();
     void sendInitData(int idx);
     void sendArduinoCmd(QString in);
     void sendGroupInfo(QString name);
-    void loadSliders(int idx);
+    void loadSliders();
     void loadGroupToSliders(QString);
     void setSliderSilent(QSlider * qs, int val);
     void showGroups();
     Group * getGroupFromName(QString name, int * idx = nullptr);
     void processSliderChange(int value, int * configVal, int * groupVal, QString groupName, QString arduinoCmd,bool hsvConvert = false);
-    QComboBox * createGroupCombo(int row, int idx);
+    QComboBox * createGroupModeCombo(int row, int idx);
+    QComboBox * createGroupStatusCombo(int row, int idx);
     QPushButton * createGroupEditButton(int row);
+    QCheckBox * createGroupCheckbox(int row);
    // void parseUSBCmd(string in);
 
 
 private slots:
-       void tableComboChanged(int idx);
+       void tableComboModeChanged(int idx);
+       void tableComboStatusChanged(int idx);
        void on_btnClose_clicked();       
        void on_sldRed_valueChanged(int value);
        void on_sldGreen_valueChanged(int value);
@@ -95,5 +105,6 @@ private slots:
        void on_cmbHSV_Groups_currentIndexChanged(int index);
        void on_cmbGradient_Groups_currentIndexChanged(int index);
        void on_edtNumLeds_textChanged();
+       void on_btnDeleteGroup_clicked();
 };
 #endif // MAINWINDOW_H

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
+    <width>800</width>
     <height>480</height>
    </rect>
   </property>
@@ -64,7 +64,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>3</number>
      </property>
      <property name="iconSize">
       <size>
@@ -180,7 +180,9 @@ QSlider::handle:vertical {
     height: 25px;
     margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
     border-radius: 8px;
-}</string>
+}
+
+</string>
        </property>
        <property name="maximum">
         <number>255</number>
@@ -292,7 +294,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -311,7 +313,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -321,6 +323,9 @@ QSlider::handle:vertical {
        </property>
       </widget>
       <widget class="QFrame" name="brdBlue">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>220</x>
@@ -330,7 +335,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -349,7 +354,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -371,7 +376,7 @@ QSlider::handle:vertical {
         <bool>false</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 0)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -390,7 +395,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -548,7 +553,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -567,7 +572,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -586,7 +591,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -679,7 +684,7 @@ color: black;</string>
       <widget class="QComboBox" name="cmbHSV_Groups">
        <property name="geometry">
         <rect>
-         <x>490</x>
+         <x>480</x>
          <y>10</y>
          <width>141</width>
          <height>25</height>
@@ -750,7 +755,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -769,7 +774,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -823,7 +828,7 @@ QSlider::handle:vertical {
         <bool>false</bool>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 0)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -842,7 +847,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -985,7 +990,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -1004,7 +1009,7 @@ QSlider::handle:vertical {
         </rect>
        </property>
        <property name="styleSheet">
-        <string notr="true">background:rgb(0,0, 00)</string>
+        <string notr="true">background:rgb(255,255,255)</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -1073,13 +1078,14 @@ QSlider::handle:vertical {
         <rect>
          <x>10</x>
          <y>40</y>
-         <width>521</width>
+         <width>621</width>
          <height>331</height>
         </rect>
        </property>
        <property name="columnCount">
-        <number>5</number>
+        <number>6</number>
        </property>
+       <column/>
        <column/>
        <column/>
        <column/>
@@ -1089,14 +1095,27 @@ QSlider::handle:vertical {
       <widget class="QPushButton" name="btnAddGroup">
        <property name="geometry">
         <rect>
-         <x>540</x>
+         <x>668</x>
          <y>40</y>
-         <width>89</width>
+         <width>101</width>
          <height>25</height>
         </rect>
        </property>
        <property name="text">
         <string>Add Group</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnDeleteGroup">
+       <property name="geometry">
+        <rect>
+         <x>668</x>
+         <y>80</y>
+         <width>101</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Delete Group</string>
        </property>
       </widget>
      </widget>
@@ -1105,7 +1124,7 @@ QSlider::handle:vertical {
    <widget class="QPushButton" name="btnClose">
     <property name="geometry">
      <rect>
-      <x>540</x>
+      <x>680</x>
       <y>0</y>
       <width>93</width>
       <height>29</height>
@@ -1118,7 +1137,7 @@ QSlider::handle:vertical {
    <widget class="QLabel" name="lblNumLeds">
     <property name="geometry">
      <rect>
-      <x>290</x>
+      <x>410</x>
       <y>0</y>
       <width>101</width>
       <height>31</height>
@@ -1136,7 +1155,7 @@ QSlider::handle:vertical {
    <widget class="QPlainTextEdit" name="edtNumLeds">
     <property name="geometry">
      <rect>
-      <x>400</x>
+      <x>530</x>
       <y>0</y>
       <width>104</width>
       <height>31</height>
@@ -1149,7 +1168,7 @@ QSlider::handle:vertical {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>640</width>
+     <width>800</width>
      <height>22</height>
     </rect>
    </property>

@@ -60,11 +60,11 @@ public:
       //  oldPosition is 0 and now the newPosition is 2 we turned it CLOCKWISE
       if (newPosition - oldPosition > 0)
       {
-        Serial.print((char)ENC_CW);
+        Serial.print("<+>");
       }
       else
       {
-        Serial.print((char)ENC_CCW);
+        Serial.print("<->");
       }
       oldPosition = newPosition;
       // Serial.println(newPosition);
@@ -77,7 +77,7 @@ public:
     if (btnKnob.read() == LOW && btnKnob.currentDuration() > LONGPRESS_TIME && gotLongPress == false)
     { // HIGH MEAN PRESSED
       // if the button was longpressed
-      Serial.print((char)ENC_LONG);
+      Serial.print("<E>");
       // the line above was printing constantly while the button was still held down so we made a
       // flag variable to set when we detected a long press
       gotLongPress = true;
@@ -90,7 +90,7 @@ public:
 
       if (!gotLongPress)
       {
-        Serial.print((char)ENC_PUSH);
+        Serial.print("<e>");
       }
 
       // if we had a long press when the button was held down we should reset that as soon as
@@ -147,6 +147,10 @@ int NUM_LEDS = 30;
 CRGB leds[MAX_LEDS];
 #define MASTER -1
 
+#define NOT_USED -1
+#define ACTIVE 0
+#define INACTIVE 1
+#define OFF 2
 struct Group
 {
 public:
@@ -155,7 +159,7 @@ public:
   int type = -1;
   int r, g, b, d, t, B;
   int sh, ss, sv, eh, es, ev;
-  int active = 0;
+  int status = NOT_USED;
 };
 
 #define MAX_NUM_GROUPS 15
@@ -219,7 +223,6 @@ boolean isConnectedPC = false;
 void setup()
 {
   Serial.begin(115200);
-  Serial.println(sizeof(ledGroup));
   // For right now only uncomment one of these at a time
   FastLED.addLeds<WS2812B, DATA_PIN_WS2812B, GRB>(leds, MAX_LEDS);
   // FastLED.addLeds<WS2811, DATA_PIN_WS2811, RBG>(leds, MAX_LEDS);
@@ -365,13 +368,14 @@ void processSerialMessage(String input)
     int groupNum = getNextInt(params);
     int groupType = getNextInt(params);
     // Serial.print("Group: " + String(groupNum));
-    groups[groupNum].active = 1;
+    groups[groupNum].status = getNextInt(params);
     groups[groupNum].type = groupType;
     // if the start or step led is different than before we have to give those
     // LEDs back to the master
     int startLED = getNextInt(params);
     int stopLED = getNextInt(params);
-    if (startLED != groups[groupNum].startLED || stopLED != groups[groupNum].stopLED)
+    // if the LED's changed OR status is INACTIVE you need to give the LEDs back tot he master
+    if (startLED != groups[groupNum].startLED || stopLED != groups[groupNum].stopLED || groups[groupNum].status == INACTIVE)
     {
       for (int i = groups[groupNum].startLED; i <= groups[groupNum].stopLED; i++)
       {
@@ -383,7 +387,11 @@ void processSerialMessage(String input)
     // set all leds in this group
     for (int i = groups[groupNum].startLED; i <= groups[groupNum].stopLED; i++)
     {
-      ledGroup[i] = groupNum;
+      //if this group is INACTIVE the leds should belong to the master so don't set them here
+      if (groups[groupNum].status != INACTIVE)
+      {
+        ledGroup[i] = groupNum;
+      }
     }
     refreshMaster();
 
@@ -421,7 +429,8 @@ void processSerialMessage(String input)
     return;
   }
 
-  // check if we're loading an entire group
+  
+  // check if we're loading a new mode, which changes the master
   if (input.indexOf("l0{") == 0)
   {
     String params = input.substring(3);
@@ -491,129 +500,128 @@ void processSerialMessage(String input)
 
   // add a command to change modes
 
-  /*if (cmd == "m")
-  {
-    // this means we are changing the mode
-    // check to see if the mode is an invalid number, less than 0 or greater than the modes we have
-    if (val > NUMBER_MODES - 1 || val < 0)
-    {
-      debug("Error: this is a bad mode number - " + String(val));
-    }
-    else
-    {
-      // set the current mode and print out to let us know that the mode has changed
-      CURRENT_MODE = val;
-      if (CURRENT_MODE == MODE_RGB)
-      {
-        modeRGB();
-        debug("Changed into RGB Mode");
-      }
-      else if (CURRENT_MODE == MODE_HSV)
-      {
-        modeHSV();
-        debug("Changed into HSV Mode");
-      }
-      else if (CURRENT_MODE == MODE_GRADIENT)
-      {
-        modeGradient();
-        debug("Changed into Gradient Mode");
-      }
-    }
-
-  }
-  else*/
+  //change num leds
   if (cmd == "nl")
   {
     NUM_LEDS = val;
-    // TODO show all the current leds again
-    turnOffLEDS();
-    refreshMaster();
-    // TODO SHOW ALL GROUPS HERE
-    for (int i = 0; i < MAX_NUM_GROUPS; i++)
-    {
-      if (groups[i].active)
-      {
-        refreshGroup(groups[i]);
-      }
-    }
+    refreshEverything();
   }
+  //change master red
   else if (cmd == "r")
   {
     MASTER_GROUP.r = val;
     refreshMaster();
   }
+  //change master green
   else if (cmd == "g")
   {
     MASTER_GROUP.g = val;
     refreshMaster();
   }
+  //change master blue
   else if (cmd == "b")
   {
     MASTER_GROUP.b = val;
     refreshMaster();
   }
+  //change master hue
   else if (cmd == "h")
   {
     MASTER_GROUP.sh = val;
     refreshMaster();
   }
+  //change master sat
   else if (cmd == "s")
   {
     MASTER_GROUP.ss = val;
     refreshMaster();
   }
+  //change master val
   else if (cmd == "v")
   {
     MASTER_GROUP.sv = val;
     refreshMaster();
   }
+  //change master daylight
   else if (cmd == "d")
   {
     MASTER_GROUP.d = val;
     refreshMaster();
   }
+  //change master tungsten
   else if (cmd == "t")
   {
     MASTER_GROUP.t = val;
     refreshMaster();
   }
-  // add in commands for the gradient values - (0 to 255)
+//change master start hue 
   else if (cmd == "sh")
   {
     MASTER_GROUP.sh = val;
     refreshMaster();
   }
+  //change master start sat
   else if (cmd == "ss")
   {
     MASTER_GROUP.ss = val;
     refreshMaster();
   }
+   //change master start val
   else if (cmd == "sv")
   {
     MASTER_GROUP.sv = val;
     refreshMaster();
   }
+  //change master end hue
   else if (cmd == "eh")
   {
     MASTER_GROUP.eh = val;
     refreshMaster();
   }
+  //change master end sat
   else if (cmd == "es")
   {
     MASTER_GROUP.es = val;
     refreshMaster();
   }
+  //change master end val
   else if (cmd == "ev")
   {
     MASTER_GROUP.ev = val;
     refreshMaster();
   }
+  //change master Brightness
   else if (cmd == "B")
   {
     MASTER_GROUP.B = val;
     refreshMaster();
   }
+  //delete a group
+  else if (cmd == "dgr"){
+    int groupToDelete = val;
 
+    //give these LEDs back to the master before deleting
+    for (int i = groups[groupToDelete].startLED; i <= groups[groupToDelete].stopLED; i++){
+      ledGroup[i] = MASTER;
+    }
+    
+
+    //to delete in an array just move all items after this one to the left
+    //      minus 1 because we need to look at the group that comes after i
+    for(int i = groupToDelete; i < MAX_NUM_GROUPS - 1; i++){
+      //we have a MAX array but no variable to keep track of how many groups are actually in
+      //the array, use the groups status to see if it isn't used
+      if (groups[i].status == NOT_USED){
+        //all groups should be in order so if we make it to a group that isnt active stop copying
+        break;
+      }
+
+      groups[i] = groups[i+1];
+    }
+
+    refreshEverything();
+
+  }
   postRecCmd();
   // if it's been more than 100ms since the last message then update the groups
   if (millis() - lastMasterMessage >= 100)
@@ -665,6 +673,8 @@ void refreshMaster()
     FastLED.show();
     return;
   }
+
+  // rgb and hsv are similar do them here
   float bP = MASTER_GROUP.B / 255.0;
   for (int i = 0; i < NUM_LEDS; i++)
   {
@@ -694,6 +704,22 @@ void printGroup(String label, Group g)
 
 void refreshGroup(Group g)
 {
+
+  //if the group is off then show all black here
+  if (g.status == OFF){
+    for (int i = g.startLED; i <= g.stopLED; i++)
+    {
+      leds[i] = CRGB(0,0,0);
+    }
+    FastLED.show();
+    return;
+  }
+
+  //if this group is inactive then it should belong to the master and do nothing
+  if (g.status == INACTIVE){
+    return;
+  }
+
   float bP = g.B / 255.0;
   if (g.type == MODE_RGB)
   {
@@ -738,4 +764,18 @@ void debug(String msg)
 #ifdef DEBUG
   Serial.println(msg);
 #endif
+}
+
+void refreshEverything(){
+  // TODO show all the current leds again
+    turnOffLEDS();
+    refreshMaster();
+    // TODO SHOW ALL GROUPS HERE
+    for (int i = 0; i < MAX_NUM_GROUPS; i++)
+    {
+      if (groups[i].status == ACTIVE)
+      {
+        refreshGroup(groups[i]);
+      }
+    }
 }

@@ -4,17 +4,18 @@
 #include "millis.h"
 #include <iostream>
 #include <fstream>
-#include <QThread>
-#include <QStringListModel>
+
 using namespace std;
 #include <QMessageBox>
 #include <unistd.h>
 
 /*
  * TODO FUTURE
-num leds needs to save in the file
 Groups need active boolean check mark
-https://www.kdab.com/qt-input-method-virtual-keyboard/
+delete group
+keyboard https://www.kdab.com/qt-input-method-virtual-keyboard/
+encoder
+
 
  *
  *
@@ -76,6 +77,7 @@ const QString FILE_NAME = "config.txt";
 const QString FILENAME_GROUPS = "groups.txt";
 int curHighlight = 0, curSelection = -1;
 
+
 Ui::MainWindow * ui2;
 void changeBackgroundOfHSVSlider(QSlider *, int, int,int);
 
@@ -85,22 +87,31 @@ void changeGradientStyleBasedOnSliders(Ui::MainWindow * ui);
 
 void highlightSlider(int sld){
 
-    if (config.mode == MODE_GROUPS){
+
+    if (config.mode == MODE_GROUPS ){
         cout << "Groups page no sliders" <<endl;
         return;
-    }
-
-    //make them all white
-    for(int i = 0; i < borders[config.mode].size(); i++){
-       borders[config.mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
     }
     if (sld == -1){
         cout << "No slider to highlight!" <<endl;
         return;
     }
+    if (sld == curHighlight){
+        return;
+    }
+
+       //turn the last hightlight white
+    borders[config.mode][curHighlight]->setStyleSheet(STYLE_WHITE_BORDER);
+
+    //make them all white
+    /*for(int i = 0; i < borders[config.mode].size(); i++){
+       borders[config.mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
+    }*/
+
 
     //now highlight one of them
     borders[config.mode][sld]->setStyleSheet(STYLE_HIGHLIGHT_BORDER);
+    curHighlight = sld;
 }
 
 void selectSlider(int sld){
@@ -114,28 +125,6 @@ void selectSlider(int sld){
     borders[config.mode][sld]->setStyleSheet(STYLE_SELECTED_BORDER);
 }
 
-unsigned char ENC_CW = 129;
-#define ENC_CCW 130
-#define ENC_PUSH 131
-#define ENC_LONG 132
-unsigned char  INIT = 133;
-void parseByteFunct(unsigned char in){
-    cout << "BYTE FUNCT: " << (int) in << endl;
-    if (in == INIT){
-        arduino->setConnected(true);
-    }  else if (in == (char)ENC_CW){
-        cout << "ENC CLOCKWISE" << endl;
-        if (encMode == SCROLL_HIGHLIGHT){
-            curHighlight++;
-            if (curHighlight > sliders[config.mode].size()-1) { curHighlight = 0;}
-            highlightSlider(curHighlight);
-        } else if (encMode == CHANGE_VALUE){
-            int curVal = sliders[config.mode][curSelection]->value();
-            sliders[config.mode][curSelection]->setValue(curVal + 3);
-        }
-    }
-}
-
 void parseUSBCmd(string in){
     cout << "USB IN: " << in << endl;    
     if (in == "ready"){
@@ -144,7 +133,7 @@ void parseUSBCmd(string in){
     }
         else if (in == "lastload"){
            cout << " LOAD FINISHED"<<endl;
-       } else if (in == "enc"){
+       } else if (in == "e"){
 
         if (encMode == SCROLL_HIGHLIGHT){
             //if we are scrolling now a click should select whatever is highlighted
@@ -158,20 +147,20 @@ void parseUSBCmd(string in){
             encMode = SCROLL_HIGHLIGHT;
         }
 
-    } else if (in == "enc+"){
+    } else if (in == "+"){
         if (encMode == SCROLL_HIGHLIGHT){
-            curHighlight++;
-            if (curHighlight > sliders[config.mode].size()-1) { curHighlight = 0;}
-            highlightSlider(curHighlight);
+            int temp = curHighlight + 1;
+            if (temp > sliders[config.mode].size()-1) { temp = 0;}
+            highlightSlider(temp);
         } else if (encMode == CHANGE_VALUE){
             int curVal = sliders[config.mode][curSelection]->value();
             sliders[config.mode][curSelection]->setValue(curVal + 3);
         }
-    } else if (in == "enc-"){
+    } else if (in == "-"){
         if (encMode == SCROLL_HIGHLIGHT){
-            curHighlight--;
-            if (curHighlight < 0) { curHighlight = sliders[config.mode].size()-1;}
-            highlightSlider(curHighlight);
+            int temp = curHighlight - 1;
+            if (temp < 0) { temp = sliders[config.mode].size()-1;}
+            highlightSlider(temp);
         } else if (encMode == CHANGE_VALUE){
             int curVal = sliders[config.mode][curSelection]->value();
             sliders[config.mode][curSelection]->setValue(curVal - 3);
@@ -188,7 +177,7 @@ void appendNum(QString& data, int n){
     }
 }
 
-void MainWindow::tableComboChanged(int idx){
+void MainWindow::tableComboModeChanged(int idx){
     QComboBox * comboBox = dynamic_cast<QComboBox *>(sender());
 
     if(comboBox)
@@ -196,24 +185,66 @@ void MainWindow::tableComboChanged(int idx){
         int row = comboBox->itemData(0).toInt();
         cout << "Combo Box Changed on row " << row << endl;
         groups[row].type = idx;
-        //TODO SAVE TO FILE WHEN THE MODE CHANGES
         saveGroupsToFile();
+        //show groups because this repopulates the combo boxes that hold each group type
+        //and a group may have switch from RGB to HSV
         showGroups();
     }
 }
+
+void MainWindow::tableComboStatusChanged(int idx){
+    QComboBox * comboBox = dynamic_cast<QComboBox *>(sender());
+
+    if(comboBox)
+    {
+        int row = comboBox->itemData(0).toInt();
+        cout << "Combo Status Box Changed on row " << row << endl;
+        groups[row].status = idx;
+        saveGroupsToFile();
+        //show the groups again because an inactive or off group shouldnt show in the combo drop downs
+        //and this re populates those
+        showGroups();
+        //let the arduino update
+        sendGroupInfo(groups[row].name);
+
+    }
+}
 //create a combo box for row of groups
-QComboBox * MainWindow::createGroupCombo(int row,int idx){
+QComboBox * MainWindow::createGroupModeCombo(int row,int idx){
     QComboBox * cmbMode = new QComboBox();
+    cmbMode->blockSignals(true);
     cmbMode->addItem("RGB"); cmbMode->addItem("HSV"); cmbMode->addItem("Gradient");
+
     cmbMode->setCurrentIndex(idx);
+
     //set the row of the combo box so it knows in the future
     cmbMode->setItemData(0,row);
 
     cmbMode->setStyleSheet("QComboBox QAbstractItemView { selection-background-color: rgb(0,0,127); selection-color: rgb(0, 0, 0); }");
     //connect the combo box to a lambda right here for the index changed
-    connect(cmbMode, SIGNAL(currentIndexChanged(int)), this, SLOT(tableComboChanged(int)));
+    connect(cmbMode, SIGNAL(currentIndexChanged(int)), this, SLOT(tableComboModeChanged(int)));
     //connect(cmbMode, &QComboBox::currentIndexChanged, [row](){cout << "CMB ROW: " << row << " INDEX: " << idx << endl;});
+
+    cmbMode->blockSignals(false);
     return cmbMode;
+}
+
+QComboBox * MainWindow::createGroupStatusCombo(int row,int idx){
+    QComboBox * cmdStatus = new QComboBox();
+    cmdStatus->blockSignals(true);
+    cmdStatus->addItem("active"); cmdStatus->addItem("inactive"); cmdStatus->addItem("off");
+
+    cmdStatus->setCurrentIndex(idx);
+
+    //set the row of the combo box so it knows in the future
+    cmdStatus->setItemData(0,row);
+
+    cmdStatus->setStyleSheet("QComboBox QAbstractItemView { selection-background-color: rgb(0,0,127); selection-color: rgb(0, 0, 0); }");
+    //connect the combo box to a lambda right here for the index changed
+    connect(cmdStatus, SIGNAL(currentIndexChanged(int)), this, SLOT(tableComboStatusChanged(int)));
+    //connect(cmdStatus, &QComboBox::currentIndexChanged, [row](){cout << "CMB ROW: " << row << " INDEX: " << idx << endl;});
+    cmdStatus->blockSignals(false);
+    return cmdStatus;
 }
 
 QPushButton * MainWindow::createGroupEditButton(int row){
@@ -261,12 +292,28 @@ QPushButton * MainWindow::createGroupEditButton(int row){
     return btn;
 }
 
+QCheckBox * MainWindow::createGroupCheckbox(int row){
+    QCheckBox * chk = new QCheckBox("");
+
+    QString biggerBox = "QCheckBox::indicator{width: 25px; height: 25px; margin:5px}";
+    chk->setStyleSheet(biggerBox);
+
+   connect(chk, &QCheckBox::clicked, [this,row,chk](){
+        cout << "CheckBox row: " << row << " value: " << chk->isChecked() << endl;
+        groups[row].status = chk->isChecked() ? 1 : 0;
+        saveGroupsToFile();
+    });
+
+    return chk;
+}
+
 //define the columns
 #define COL_NAME 0
 #define COL_STARTLED 1
 #define COL_STOPLED 2
 #define COL_MODE 3
 #define COL_EDITBTN 4
+#define COL_STATUS 5
 //show the groups in the table on the GROUPS page
 void MainWindow::showGroups(){
 
@@ -276,7 +323,7 @@ void MainWindow::showGroups(){
     groupsRGB.clear(); groupsRGB.append("MASTER");
     groupsHSV.clear(); groupsHSV.append("MASTER");
     groupsGradient.clear(); groupsGradient.append("MASTER");
-
+    ui->tblGroups->blockSignals(true);
     for(int i = 0; i < groups.size(); i++){
         //make a row in the table
         ui->tblGroups->insertRow(i);
@@ -284,19 +331,29 @@ void MainWindow::showGroups(){
         ui->tblGroups->setItem(i,COL_NAME, new QTableWidgetItem(cur.name));
         ui->tblGroups->setItem(i,COL_STARTLED, new QTableWidgetItem( QString::number(cur.startLED)));
         ui->tblGroups->setItem(i,COL_STOPLED, new QTableWidgetItem(QString::number(cur.stopLED)));
-        QComboBox * cmbMode = createGroupCombo(i, cur.type);
+        QComboBox * cmbMode = createGroupModeCombo(i, cur.type);
         ui->tblGroups->setCellWidget(i,COL_MODE, cmbMode);
         QPushButton * btnEdit = createGroupEditButton(i);
         ui->tblGroups->setCellWidget(i,COL_EDITBTN, btnEdit);
+        //QCheckBox * chkActive = createGroupCheckbox(i);
+        //ui->tblGroups->setCellWidget(i,COL_ACTIVE, chkActive);
+        QComboBox * cmbStatus = createGroupStatusCombo(i, cur.status);
+        ui->tblGroups->setCellWidget(i,COL_STATUS, cmbStatus);
 
-        if (cur.type == MODE_RGB){
-           groupsRGB.append(cur.name);
-        } else if (cur.type == MODE_HSV){
-            groupsHSV.append(cur.name);
-         } else if (cur.type == MODE_GRADIENT){
-            groupsGradient.append(cur.name);
-         }
+        //if this group is active put it on the correct list
+        if (cur.status == ACTIVE){
+            if (cur.type == MODE_RGB){
+               groupsRGB.append(cur.name);
+            } else if (cur.type == MODE_HSV){
+                groupsHSV.append(cur.name);
+             } else if (cur.type == MODE_GRADIENT){
+                groupsGradient.append(cur.name);
+             }
+        }
+
+
     }
+    ui->tblGroups->blockSignals(false);
 
     //fill the combo boxes with the correct groups
     ui->cmbRGB_Groups->setModel( new QStringListModel(groupsRGB));
@@ -320,7 +377,7 @@ MainWindow::MainWindow(QWidget *parent)
     string port = "/dev/ttyACM0";
     arduino = new USB_Comm(port);
     arduino->setParseFunc(parseUSBCmd);
-    arduino->setParseByteFunc(parseByteFunct);
+    //arduino->setParseByteFunc(parseByteFunct);
     usleep(2000*1000);
 
     while(!arduino->isConnected()){
@@ -328,7 +385,7 @@ MainWindow::MainWindow(QWidget *parent)
         //usleep(500*1000);
     }
 
-    loadDataFromFile();
+    loadConfigFromFile();
 
     //A 2D array of the boarders and sliders is used to highlight certain sliders and also to change their value
     //Each row is a mode, and the column is a list of pointers to the objects on the page for that mode
@@ -400,6 +457,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tblGroups->setHorizontalHeaderItem(COL_STOPLED, new QTableWidgetItem("Stop LED"));
     ui->tblGroups->setHorizontalHeaderItem(COL_MODE, new QTableWidgetItem("Type"));
     ui->tblGroups->setHorizontalHeaderItem(COL_EDITBTN, new QTableWidgetItem("Edit"));
+    ui->tblGroups->setHorizontalHeaderItem(COL_STATUS, new QTableWidgetItem("Active"));
+
     loadGroupsFromFile();
     //show the groups in the table on the groups page
     showGroups();
@@ -410,6 +469,7 @@ MainWindow::MainWindow(QWidget *parent)
         sendGroupInfo(groups[i].name);
         usleep(20*1000);
     }
+
 
 }
 
@@ -432,7 +492,7 @@ void MainWindow::sendInitData(int idx){
     appendNum(msg,config.B);
     msg += "}";
     sendArduinoCmd(msg);
-    loadSliders(idx);
+    loadSliders();
     highlightSlider(0);
 
     } else if (idx == MODE_HSV){
@@ -445,7 +505,7 @@ void MainWindow::sendInitData(int idx){
     appendNum(msg,config.v);
     msg += "}";
     sendArduinoCmd(msg);
-    loadSliders(idx);
+    loadSliders();
     highlightSlider(0);
     } else if (idx == MODE_GRADIENT){
         //gradient
@@ -458,7 +518,7 @@ void MainWindow::sendInitData(int idx){
         appendNum(msg,config.ev);
         msg += "}";
         sendArduinoCmd(msg);
-        loadSliders(idx);
+        loadSliders();
         highlightSlider(0);
     }
     //mark that we sent data for that page
@@ -466,7 +526,7 @@ void MainWindow::sendInitData(int idx){
 }
 
 //call this after everything has been drawn
-void MainWindow::loadSliders(int idx){
+void MainWindow::loadSliders(){
 
     if (config.mode == MODE_RGB){
         //move all sliders down and show no background
@@ -633,7 +693,7 @@ void MainWindow::processSliderChange(int value, int * configVal, int * groupVal,
         if (abs(*configVal - value) > SLD_CHANGE_THRESHOLD )
         {
                 *configVal = value;
-                saveDataToFile();
+                saveConfigToFile();
                 QString msg = arduinoCmd + QString::number(value);
                 sendArduinoCmd(msg);
         }
@@ -851,19 +911,6 @@ void MainWindow::on_sldHue_valueChanged(int value)
     processSliderChange(value, &config.h, &getGroupFromName(groupsHSV[groupIdx])->sh, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "h:", true);
 
 
-    /*if (abs(config.h - value) > SLD_CHANGE_THRESHOLD )
-    {
-        //QTCreator is 0 to 359 but arduino is 0 to 254
-        double zeroTo1 = value / 359.0;
-        value = (int)(zeroTo1 * 254);
-        QString msg = "h:" + QString::number(value);
-        sendArduinoCmd(msg);
-        config.h = value;
-        saveDataToFile();
-        //cout << "SLIDER HUE CHANGED" << endl;
-    }*/
-
-
 }
 
 void MainWindow::on_sldSat_valueChanged(int value)
@@ -884,13 +931,6 @@ void MainWindow::on_sldSat_valueChanged(int value)
     }
     processSliderChange(value, &config.s, &getGroupFromName(groupsHSV[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "s:", true);
 
-    /*if (abs(config.s - value) > SLD_CHANGE_THRESHOLD )
-    {
-    QString msg = "s:" + QString::number(value);
-    sendArduinoCmd(msg);
-    config.s = value;
-    saveDataToFile();
-    }*/
 }
 
 void MainWindow::on_sldVal_valueChanged(int value)
@@ -909,14 +949,6 @@ void MainWindow::on_sldVal_valueChanged(int value)
         return;
     }
     processSliderChange(value, &config.v, &getGroupFromName(groupsHSV[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "v:", true);
-
-   /*if (abs(config.v - value) > SLD_CHANGE_THRESHOLD )
-    {
-    QString msg = "v:" + QString::number(value);
-    sendArduinoCmd(msg);
-    config.v = value;
-    saveDataToFile();
-    }*/
 }
 
 void changeGradientStyleBasedOnSliders(Ui::MainWindow * ui){
@@ -954,20 +986,6 @@ void MainWindow::on_sldStartHue_valueChanged(int value)
     }
     processSliderChange(value, &config.sh, &getGroupFromName(groupsGradient[groupIdx])->sh, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "sh:", true);
 
-
-
-    //QTCreator is 0 to 359 but arduino is 0 to 254
-   /* double zeroTo1 = value / 359.0;
-    value = (int)(zeroTo1 * 254);
-
-    if (abs(config.sh - value) > SLD_CHANGE_THRESHOLD )
-    {
-        QString msg = "sh:" + QString::number(value);
-        sendArduinoCmd(msg);
-        changeGradientStyleBasedOnSliders(ui);
-        config.sh = value;
-        saveDataToFile();
-    }*/
 }
 
 void MainWindow::on_sldStartSat_valueChanged(int value)
@@ -987,15 +1005,6 @@ void MainWindow::on_sldStartSat_valueChanged(int value)
         return;
     }
     processSliderChange(value, &config.ss, &getGroupFromName(groupsGradient[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ss:", true);
-
-    /*if (abs(config.ss - value) > SLD_CHANGE_THRESHOLD )
-    {
-    QString msg = "ss:" + QString::number(value);
-    sendArduinoCmd(msg);
-    changeGradientStyleBasedOnSliders(ui);
-    config.ss = value;
-    saveDataToFile();
-    }*/
 }
 
 void MainWindow::on_sldStartVal_valueChanged(int value)
@@ -1013,15 +1022,6 @@ void MainWindow::on_sldStartVal_valueChanged(int value)
         return;
     }
     processSliderChange(value, &config.sv, &getGroupFromName(groupsGradient[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "sv:", true);
-
-   /* if (abs(config.sv - value) > SLD_CHANGE_THRESHOLD )
-    {
-        QString msg = "sv:" + QString::number(value);
-        sendArduinoCmd(msg);
-        changeGradientStyleBasedOnSliders(ui);
-        config.sv = value;
-        saveDataToFile();
-    }*/
 }
 
 void MainWindow::on_sldEndHue_valueChanged(int value)
@@ -1044,17 +1044,6 @@ void MainWindow::on_sldEndHue_valueChanged(int value)
     }
     processSliderChange(value, &config.eh, &getGroupFromName(groupsGradient[groupIdx])->eh, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "eh:", true);
 
-    //QTCreator is 0 to 359 but arduino is 0 to 254
-    /*double zeroTo1 = value / 359.0;
-    value = (int)(zeroTo1 * 254);
-    if (abs(config.eh - value) > SLD_CHANGE_THRESHOLD )
-    {
-        QString msg = "eh:" + QString::number(value);
-        sendArduinoCmd(msg);
-        changeGradientStyleBasedOnSliders(ui);
-        config.eh = value;
-        saveDataToFile();
-    }*/
 }
 
 void MainWindow::on_sldEndSat_valueChanged(int value)
@@ -1074,14 +1063,6 @@ void MainWindow::on_sldEndSat_valueChanged(int value)
     }
     processSliderChange(value, &config.es, &getGroupFromName(groupsGradient[groupIdx])->es, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "es:", true);
 
-   /* if (abs(config.es - value) > SLD_CHANGE_THRESHOLD )
-    {
-        QString msg = "es:" + QString::number(value);
-        sendArduinoCmd(msg);
-        changeGradientStyleBasedOnSliders(ui);
-        config.es = value;
-        saveDataToFile();
-    }*/
 }
 
 void MainWindow::on_sldEndVal_valueChanged(int value)
@@ -1099,18 +1080,9 @@ void MainWindow::on_sldEndVal_valueChanged(int value)
         return;
     }
     processSliderChange(value, &config.ev, &getGroupFromName(groupsGradient[groupIdx])->ev, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ev:", true);
-
-    /*if (abs(config.ev - value) > SLD_CHANGE_THRESHOLD )
-    {
-        QString msg = "ev:" + QString::number(value);
-        sendArduinoCmd(msg);
-        changeGradientStyleBasedOnSliders(ui);
-        config.ev = value;
-        saveDataToFile();
-    }*/
 }
 
-void MainWindow::saveDataToFile(){
+void MainWindow::saveConfigToFile(){
     ofstream outfile(FILE_NAME.toStdString().c_str());
     if (!outfile.is_open()){
         //TODO make this a message box
@@ -1126,17 +1098,20 @@ void MainWindow::saveDataToFile(){
     outfile << config.sh << " " << config.ss << " " << config.sv << " " << config.eh << " " << config.es << " " << config.ev << endl;
     //last line is the mode
     outfile << static_cast<int>(config.mode) << endl;
+    outfile << config.numLEDs << endl;
+
     outfile.close();
 }
 
-void MainWindow::loadDataFromFile(){
+void MainWindow::loadConfigFromFile(){
     ifstream infile(FILE_NAME.toStdString().c_str());
     if (!infile.is_open()){
         //TODO make this a message box
         cout << "Created new settings file!" <<endl;
-        CONFIG newConf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        int startNumLEDs = 10; //just show something, if it's 0 it seems like it's not working
+        CONFIG newConf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,startNumLEDs};
         config = newConf;
-        saveDataToFile();
+        saveConfigToFile();
     }
 
     //first line is rgb
@@ -1147,15 +1122,23 @@ void MainWindow::loadDataFromFile(){
     infile >> config.sh >> config.ss >> config.sv >> config.eh >> config.es >> config.ev;
     //last line is the mode 
     infile >> config.mode ;
+    infile >> config.numLEDs;
     infile.close();
 
     cout << "---Loaded config settings---" << endl;
+    cout << "NUM LEDs: " << config.numLEDs << endl;
     cout << "R,G,B,D,T,B:\t" << config.r << " "  << config.g  << " "  << config.b <<  " "  << config.d <<  " "  << config.t << " "  << config.B <<endl;
     cout << "H,S,V:\t" << config.h << " "  << config.s  << " "  << config.v << endl;
     cout << "GRADIENT" << endl;
     cout << "\tSTART--> H,S,V:\t" << config.sh << " "  << config.ss  << " "  << config.sv << endl;
     cout << "\tEND  --> H,S,V:\t" << config.eh << " "  << config.es  << " "  << config.ev << endl;
     cout << "MODE: " << config.mode << endl;
+
+    //set the num leds
+    ui->edtNumLeds->blockSignals(true);
+    ui->edtNumLeds->setPlainText( QString::number(config.numLEDs));
+    ui->edtNumLeds->blockSignals(false);
+    sendArduinoCmd("nl:" + QString::number(config.numLEDs));
 }
 
 void MainWindow::loadGroupsFromFile(){
@@ -1187,7 +1170,7 @@ void MainWindow::loadGroupsFromFile(){
             nums.append( lP[i].toInt());
         }
         //make new group to append
-        Group g = { lP[0],nums[0],nums[1],nums[2],nums[3],nums[4],nums[5],nums[6],nums[7],nums[8],nums[9],nums[10],nums[11],nums[12],nums[13],nums[14]};
+        Group g = { lP[0],nums[0],nums[1],nums[2],nums[3],nums[4],nums[5],nums[6],nums[7],nums[8],nums[9],nums[10],nums[11],nums[12],nums[13],nums[14],nums[15]};
         cout << g.name.toStdString() << " " << g.startLED << " " << g.stopLED << " " << g.type << " " << g.r << " " << g.g << " " << g.b << " " << g.d << " ";
         cout << g.t << " "<< g.B << endl;
         groups.append(g);
@@ -1220,7 +1203,7 @@ void MainWindow::saveGroupsToFile(){
         Group g = groups[i]; 
         outfile << g.name.toStdString() << "," << g.startLED << "," << g.stopLED << "," << g.type << ",";
         outfile << g.r << ","<< g.g<< "," << g.b << ","  << g.d << "," << g.t << "," << g.B << ",";
-        outfile << g.sh << ","<< g.ss<< "," << g.sv << ","  << g.eh << "," << g.es << "," << g.ev << endl;
+        outfile << g.sh << ","<< g.ss<< "," << g.sv << ","  << g.eh << "," << g.es << "," << g.ev << "," << g.status << endl;
     }
     outfile.close();
 
@@ -1235,9 +1218,23 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
     config.mode = index;
     curHighlight = 0;
     curSelection = 0;
-    selectSlider(curSelection);
+
+    //if groups page do nothing
+    if (index == MODE_GROUPS){
+        return;
+    }
+
+    //unhightlight whatever is highlighted
+    for(int i =0; i < borders[config.mode].size(); i++){
+        QString style = borders[config.mode][i]->styleSheet();
+        //if the qsheet has black in it unselect
+        if (style.contains(STYLE_HIGHLIGHT_BORDER) || style.contains(STYLE_SELECTED_BORDER)){
+            borders[config.mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
+        }
+    }
+
     highlightSlider(curHighlight);
-    saveDataToFile();
+    saveConfigToFile();
 
     QString msg = "m:" + QString::number(index);
     sendArduinoCmd(msg);
@@ -1299,6 +1296,7 @@ void MainWindow::sendGroupInfo(QString name){
 
     QString msg = "gr{" + QString::number(idx);
     appendNum(msg, g->type);
+    appendNum(msg, g->status);
     appendNum(msg, g->startLED);
     appendNum(msg, g->stopLED);
     if (g->type == MODE_RGB){
@@ -1334,13 +1332,36 @@ void MainWindow::setSliderSilent(QSlider *qs, int val){
 
 void MainWindow::on_btnAddGroup_clicked()
 {
-    Group g = {"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    Group g = {"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     g.name = "Group " + QString::number(groups.size() + 1);
     groups.append(g);
     showGroups();
     saveGroupsToFile();
+    sendGroupInfo(g.name);
 
+}
 
+bool isValidGroupLED(QList<Group> g, QString nameGroupChanging,int led){
+
+    if (led < 0 || led >= config.numLEDs){
+        QMessageBox msgBox;
+        msgBox.setText("Please choose an LED from 0 to NUM LEDS ( 0 to " + QString::number(config.numLEDs) + " )");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+        return false;
+    }
+    //go through all groups, if the led passed in lives within another range return false
+    for(int i =0; i < g.size(); i++){
+        //we will always be in the range of our own group
+        if (g[i].name != nameGroupChanging && g[i].startLED <= led && led <= g[i].stopLED){
+            QMessageBox msgBox;
+            msgBox.setText("The LED overlaps with another group! Choose another LED");
+            msgBox.setStandardButtons(QMessageBox::Ok);
+            msgBox.exec();
+            return false;
+        }
+    }
+    return true;
 }
 
 void MainWindow::on_tblGroups_cellChanged(int row, int column)
@@ -1348,22 +1369,44 @@ void MainWindow::on_tblGroups_cellChanged(int row, int column)
 
     Group * groupToChange = &groups[row];
     QTableWidgetItem * cell = ui->tblGroups->item(row,column);
+
+    int madeChange = 0;
     //TODO catch a toInt error on the cell
     switch(column){
         case COL_NAME:
             groupToChange->name = cell->text();
+            madeChange =1;
             break;
         case COL_STARTLED:
-            groupToChange->startLED = cell->text().toInt();
+            if (isValidGroupLED(groups,groupToChange->name,cell->text().toInt())){
+                groupToChange->startLED = cell->text().toInt();
+                madeChange =1;
+            } else {
+                //set the cell text back to what it was
+                //but dont fire the cell changed again
+                ui->tblGroups->blockSignals(true);
+                cell->setText(QString::number(groupToChange->startLED));
+                ui->tblGroups->blockSignals(false);
+            }
             break;
         case COL_STOPLED:
-            groupToChange->stopLED = cell->text().toInt();
+             if (isValidGroupLED(groups,groupToChange->name,cell->text().toInt())){
+                madeChange =1;
+                groupToChange->stopLED = cell->text().toInt();
+             }else {
+                 //set the cell text back to what it was
+                  ui->tblGroups->blockSignals(true);
+                 cell->setText(QString::number(groupToChange->stopLED));
+                 ui->tblGroups->blockSignals(false);
+             }
             break;      
         default:
             break;
     }
-    sendGroupInfo(groupToChange->name);
-    saveGroupsToFile();
+    if (madeChange == 1){
+        sendGroupInfo(groupToChange->name);
+        saveGroupsToFile();
+    }
 
 
 }
@@ -1372,7 +1415,7 @@ void MainWindow::on_cmbRGB_Groups_currentIndexChanged(int index)
 {
     //if it's on master then change the whole entire strip
     if (index == 0){
-        loadSliders(0);
+        loadSliders();
     } else {
         loadGroupToSliders(groupsRGB[index]);
     }
@@ -1382,7 +1425,7 @@ void MainWindow::on_cmbHSV_Groups_currentIndexChanged(int index)
 {
     //if it's on master then change the whole entire strip
     if (index == 0){
-        loadSliders(0);
+        loadSliders();
     } else {
         loadGroupToSliders(groupsHSV[index]);
     }
@@ -1392,7 +1435,7 @@ void MainWindow::on_cmbGradient_Groups_currentIndexChanged(int index)
 {
     //if it's on master then change the whole entire strip
     if (index == 0){
-        loadSliders(0);
+        loadSliders();
     } else {
         loadGroupToSliders(groupsGradient[index]);
     }
@@ -1415,6 +1458,38 @@ void MainWindow::on_edtNumLeds_textChanged()
     }
 
     sendArduinoCmd("nl:" + QString::number(numLeds));
+    config.numLEDs = numLeds;
+    saveConfigToFile();
 
+}
+
+void MainWindow::on_btnDeleteGroup_clicked()
+{
+
+    QModelIndexList selection = ui->tblGroups->selectionModel()->selectedIndexes();
+    //TODO should this delete multiple selections?
+    if (selection.size() == 0 || selection.size() > 1){
+        QMessageBox msgBox;
+        msgBox.setText("Please click on the group name you want to delete first.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+        return;
+    }
+     int idxToDelete = selection.at(0).row();
+
+    QMessageBox msgBox;
+    msgBox.setText("Are you sure you want to delete " + groups[idxToDelete].name);
+    msgBox.setStandardButtons(QMessageBox::Yes);
+    msgBox.addButton(QMessageBox::No);
+    int ret = msgBox.exec();
+
+   if (ret == QMessageBox::Yes){
+        cout << "Deleting index " << idxToDelete << " from groups!" << endl;
+        groups.removeAt(idxToDelete);
+        //send the arduino command to delete this
+        sendArduinoCmd("dgr:" + QString::number(idxToDelete));
+        showGroups();
+        saveGroupsToFile();
+    }
 }
 
