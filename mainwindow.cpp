@@ -194,7 +194,7 @@ QComboBox * MainWindow::createGroupCombo(int row,int idx){
 
     cmbMode->setStyleSheet("QComboBox QAbstractItemView { selection-background-color: rgb(0,0,127); selection-color: rgb(0, 0, 0); }");
     //connect the combo box to a lambda right here for the index changed
-    connect(cmbMode, &QComboBox::currentIndexChanged, [=]( int idx){
+    connect(cmbMode, &QComboBox::currentIndexChanged, this, [this,row]( int idx){
         cout << "Combo Box Changed on row " << row << endl;
         groups[row].type = idx;
         //TODO SAVE TO FILE WHEN THE MODE CHANGES
