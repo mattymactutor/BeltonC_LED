@@ -141,7 +141,7 @@ void parseByteFunct(unsigned char in){
 
 void parseUSBCmd(string in){
     cout << "USB IN: " << in << endl;
-    ui2->lblIncMsg->setText(QString::fromStdString(in));
+
     if (in == "ready"){
         arduino->setConnected(true);
         cout << "Arduino is live" << endl;
@@ -292,7 +292,7 @@ MainWindow::MainWindow(QWidget *parent)
         arduino->sendMsg("init");
         //usleep(500*1000);
     }
-    ui->lblStatus->setText("Connected to Arduino on " + QString::fromStdString(port));
+
     loadDataFromFile();
 
     //A 2D array of the boarders and sliders is used to highlight certain sliders and also to change their value
@@ -515,8 +515,7 @@ void MainWindow::loadSliders(int idx){
 void MainWindow::parseArduinoCmd(string in){
 
      cout << "USB IN: " << in << endl;
-     ui->lblIncMsg->setText(QString::fromStdString(in));
-
+     
         if (in == "ready"){
             isArduinoConnected = true;
            // loadSliders();
