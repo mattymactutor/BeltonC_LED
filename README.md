@@ -21,10 +21,15 @@ For rpi 4
 ```
 sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
 ```
-if your application uses QSerialPort you need to run. (* THIS PROJECT USES QSerialPort *)
+if your application uses QSerialPort you need to run. 
 ```
 sudo apt-get install libqt5serialport5
 sudo apt-get install libqt5serialport5-dev
+```
+
+This project uses libserial
+```
+sudo apt install libserial-dev
 ```
 
 -Clone the repository on RPI4 which will create a BeltonC_LED folder and put all of the GIT files in it
