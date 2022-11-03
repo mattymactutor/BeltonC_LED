@@ -146,6 +146,7 @@ int NUM_LEDS = 30;
 // Ex:  leds[0]  this opens up locker number 0 which is the first locker
 CRGB leds[MAX_LEDS];
 #define MASTER -1
+int BRIGHTNESS_LED_STRIP = 100;
 
 #define NOT_USED -1
 #define ACTIVE 0
@@ -621,6 +622,10 @@ void processSerialMessage(String input)
 
     refreshEverything();
 
+  }else if (cmd == "MB"){
+    BRIGHTNESS_LED_STRIP = val;
+    FastLED.setBrightness(BRIGHTNESS_LED_STRIP);
+    FastLED.show();
   }
   postRecCmd();
   // if it's been more than 100ms since the last message then update the groups

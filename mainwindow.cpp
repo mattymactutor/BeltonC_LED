@@ -11,8 +11,7 @@ using namespace std;
 
 /*
  * TODO FUTURE
-Groups need active boolean check mark
-delete group
+
 keyboard https://www.kdab.com/qt-input-method-virtual-keyboard/
 encoder
 
@@ -43,7 +42,7 @@ encoder
 #define ENDSAT 4
 #define ENDVAL 5
 
-#define SLD_CHANGE_THRESHOLD 5
+#define SLD_CHANGE_THRESHOLD 4
 enum ENC_MODE{
     SCROLL_HIGHLIGHT,
     CHANGE_VALUE
@@ -471,6 +470,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
 
+    //connect all of the master sliders to the function
+    connect(ui->sldMasterRGB, &QSlider::valueChanged, this, &MainWindow::on_sldMasterBrightness);
+    connect(ui->sldMasterHSV, &QSlider::valueChanged, this, &MainWindow::on_sldMasterBrightness);
+    connect(ui->sldMasterGradient, &QSlider::valueChanged, this, &MainWindow::on_sldMasterBrightness);
+
 }
 
 void MainWindow::sendInitData(int idx){
@@ -690,7 +694,7 @@ void MainWindow::processSliderChange(int value, int * configVal, int * groupVal,
     //if master group check if it changed enough
     if (groupName == "MASTER"){
         //check if we've moved the slider enough to send the new data
-        if (abs(*configVal - value) > SLD_CHANGE_THRESHOLD )
+        if (abs(*configVal - value) > SLD_CHANGE_THRESHOLD || *configVal > 252 )
         {
                 *configVal = value;
                 saveConfigToFile();
@@ -702,7 +706,7 @@ void MainWindow::processSliderChange(int value, int * configVal, int * groupVal,
     //check if the slider changed this much for this group
     else {
 
-        if (abs(*groupVal - value) > SLD_CHANGE_THRESHOLD )
+        if (abs(*groupVal - value) > SLD_CHANGE_THRESHOLD || *groupVal > 252)
         {
             *groupVal = value;
             saveGroupsToFile();
@@ -929,7 +933,7 @@ void MainWindow::on_sldSat_valueChanged(int value)
     if (groupIdx == -1){
         return;
     }
-    processSliderChange(value, &config.s, &getGroupFromName(groupsHSV[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "s:", true);
+    processSliderChange(value, &config.s, &getGroupFromName(groupsHSV[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "s:");
 
 }
 
@@ -948,7 +952,7 @@ void MainWindow::on_sldVal_valueChanged(int value)
     if (groupIdx == -1){
         return;
     }
-    processSliderChange(value, &config.v, &getGroupFromName(groupsHSV[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "v:", true);
+    processSliderChange(value, &config.v, &getGroupFromName(groupsHSV[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsHSV[groupIdx], "v:");
 }
 
 void changeGradientStyleBasedOnSliders(Ui::MainWindow * ui){
@@ -977,6 +981,7 @@ void MainWindow::on_sldStartHue_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldStartHue, value,180,255);
     changeBackgroundOfHSVSlider(ui->sldStartSat, value,ui->sldStartSat->value(),255);
     changeBackgroundOfHSVSlider(ui->sldStartVal, value,ui->sldStartSat->value(),ui->sldStartVal->value());
+    changeGradientStyleBasedOnSliders(ui);
 
 
     //on load this can get called before the view is loaded which gives -1 at the index
@@ -999,12 +1004,13 @@ void MainWindow::on_sldStartSat_valueChanged(int value)
    }
     changeBackgroundOfHSVSlider(ui->sldStartSat, ui->sldStartHue->value(),value,255);
     changeBackgroundOfHSVSlider(ui->sldStartVal, ui->sldStartHue->value(),value,ui->sldStartVal->value());
+    changeGradientStyleBasedOnSliders(ui);
 
     int groupIdx = ui->cmbGradient_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    processSliderChange(value, &config.ss, &getGroupFromName(groupsGradient[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ss:", true);
+    processSliderChange(value, &config.ss, &getGroupFromName(groupsGradient[groupIdx])->ss, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ss:");
 }
 
 void MainWindow::on_sldStartVal_valueChanged(int value)
@@ -1016,12 +1022,13 @@ void MainWindow::on_sldStartVal_valueChanged(int value)
        selectSlider(curSelection);
    }
     changeBackgroundOfHSVSlider(ui->sldStartVal, ui->sldStartHue->value(),ui->sldStartSat->value(),value);
+    changeGradientStyleBasedOnSliders(ui);
 
     int groupIdx = ui->cmbGradient_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    processSliderChange(value, &config.sv, &getGroupFromName(groupsGradient[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "sv:", true);
+    processSliderChange(value, &config.sv, &getGroupFromName(groupsGradient[groupIdx])->sv, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "sv:");
 }
 
 void MainWindow::on_sldEndHue_valueChanged(int value)
@@ -1036,7 +1043,7 @@ void MainWindow::on_sldEndHue_valueChanged(int value)
     changeBackgroundOfHSVSlider(ui->sldEndHue, value,180,255);
     changeBackgroundOfHSVSlider(ui->sldEndSat, value,ui->sldEndSat->value(),255);
     changeBackgroundOfHSVSlider(ui->sldEndVal, value,ui->sldEndSat->value(),ui->sldEndVal->value());
-
+    changeGradientStyleBasedOnSliders(ui);
 
     int groupIdx = ui->cmbGradient_Groups->currentIndex();
     if (groupIdx == -1){
@@ -1056,12 +1063,13 @@ void MainWindow::on_sldEndSat_valueChanged(int value)
    }
     changeBackgroundOfHSVSlider(ui->sldEndSat, ui->sldEndHue->value(),value,255);
     changeBackgroundOfHSVSlider(ui->sldEndVal, ui->sldEndHue->value(),value,ui->sldEndVal->value());
+    changeGradientStyleBasedOnSliders(ui);
 
     int groupIdx = ui->cmbGradient_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    processSliderChange(value, &config.es, &getGroupFromName(groupsGradient[groupIdx])->es, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "es:", true);
+    processSliderChange(value, &config.es, &getGroupFromName(groupsGradient[groupIdx])->es, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "es:");
 
 }
 
@@ -1074,12 +1082,13 @@ void MainWindow::on_sldEndVal_valueChanged(int value)
        selectSlider(curSelection);
    }
     changeBackgroundOfHSVSlider(ui->sldEndVal, ui->sldEndHue->value(),ui->sldEndSat->value(),value);
+    changeGradientStyleBasedOnSliders(ui);
 
     int groupIdx = ui->cmbGradient_Groups->currentIndex();
     if (groupIdx == -1){
         return;
     }
-    processSliderChange(value, &config.ev, &getGroupFromName(groupsGradient[groupIdx])->ev, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ev:", true);
+    processSliderChange(value, &config.ev, &getGroupFromName(groupsGradient[groupIdx])->ev, groupIdx == 0 ? "MASTER" : groupsGradient[groupIdx], "ev:");
 }
 
 void MainWindow::saveConfigToFile(){
@@ -1099,6 +1108,7 @@ void MainWindow::saveConfigToFile(){
     //last line is the mode
     outfile << static_cast<int>(config.mode) << endl;
     outfile << config.numLEDs << endl;
+    outfile << config.MB << endl;
 
     outfile.close();
 }
@@ -1107,9 +1117,14 @@ void MainWindow::loadConfigFromFile(){
     ifstream infile(FILE_NAME.toStdString().c_str());
     if (!infile.is_open()){
         //TODO make this a message box
-        cout << "Created new settings file!" <<endl;
-        int startNumLEDs = 10; //just show something, if it's 0 it seems like it's not working
-        CONFIG newConf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,startNumLEDs};
+        cout << "Created new settings file!" << endl;
+        CONFIG newConf;
+        newConf.r = 0; newConf.g = 0; newConf.b = 0; newConf.d = 0; newConf.t = 0; newConf.B = 255;
+        newConf.h = 0; newConf.s = 255; newConf.v = 255;
+        newConf.sh = 0; newConf.ss = 255; newConf.sv = 255; newConf.eh = 0; newConf.es = 255; newConf.ev = 255;
+        newConf.mode = 0;
+        newConf.numLEDs = 10;//just show something, if it's 0 it seems like it's not working
+        newConf.MB = 255;
         config = newConf;
         saveConfigToFile();
     }
@@ -1123,6 +1138,7 @@ void MainWindow::loadConfigFromFile(){
     //last line is the mode 
     infile >> config.mode ;
     infile >> config.numLEDs;
+    infile >> config.MB;
     infile.close();
 
     cout << "---Loaded config settings---" << endl;
@@ -1133,12 +1149,29 @@ void MainWindow::loadConfigFromFile(){
     cout << "\tSTART--> H,S,V:\t" << config.sh << " "  << config.ss  << " "  << config.sv << endl;
     cout << "\tEND  --> H,S,V:\t" << config.eh << " "  << config.es  << " "  << config.ev << endl;
     cout << "MODE: " << config.mode << endl;
+    cout << "Master Brightness: " << config.MB << endl;
 
     //set the num leds
     ui->edtNumLeds->blockSignals(true);
     ui->edtNumLeds->setPlainText( QString::number(config.numLEDs));
     ui->edtNumLeds->blockSignals(false);
     sendArduinoCmd("nl:" + QString::number(config.numLEDs));
+
+    ui->sldMasterRGB->blockSignals(true);
+    ui->sldMasterRGB->setValue(config.MB);
+    ui->sldMasterRGB->blockSignals(false);
+    changeBackgroundOfRGBSlider(ui->sldMasterRGB, 194, 84, 14, config.MB/255.0);
+
+    ui->sldMasterHSV->blockSignals(true);
+    ui->sldMasterHSV->setValue(config.MB);
+    ui->sldMasterHSV->blockSignals(false);
+    changeBackgroundOfRGBSlider(ui->sldMasterHSV, 194, 84, 14, config.MB/255.0);
+
+    ui->sldMasterGradient->blockSignals(true);
+    ui->sldMasterGradient->setValue(config.MB);
+    ui->sldMasterGradient->blockSignals(false);
+    changeBackgroundOfRGBSlider(ui->sldMasterGradient, 194, 84, 14, config.MB/255.0);
+
 }
 
 void MainWindow::loadGroupsFromFile(){
@@ -1225,19 +1258,35 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
     }
 
     //unhightlight whatever is highlighted
-    for(int i =0; i < borders[config.mode].size(); i++){
+    /*for(int i =0; i < borders[config.mode].size(); i++){
         QString style = borders[config.mode][i]->styleSheet();
         //if the qsheet has black in it unselect
         if (style.contains(STYLE_HIGHLIGHT_BORDER) || style.contains(STYLE_SELECTED_BORDER)){
             borders[config.mode][i]->setStyleSheet(STYLE_WHITE_BORDER);
         }
-    }
+    }*/
 
     highlightSlider(curHighlight);
     saveConfigToFile();
 
     QString msg = "m:" + QString::number(index);
     sendArduinoCmd(msg);
+
+    //load the master slider on the page that just got activated
+    if (config.mode == MODE_RGB){
+        ui->sldMasterRGB->blockSignals(true);
+        ui->sldMasterRGB->setValue(config.MB);
+        ui->sldMasterRGB->blockSignals(false);
+    }
+    else if (config.mode == MODE_HSV){
+        ui->sldMasterHSV->blockSignals(true);
+        ui->sldMasterHSV->setValue(config.MB);
+        ui->sldMasterHSV->blockSignals(false);
+    } else if (config.mode == MODE_GRADIENT){
+        ui->sldMasterGradient->blockSignals(true);
+        ui->sldMasterGradient->setValue(config.MB);
+        ui->sldMasterGradient->blockSignals(false);
+    }
 
 
     //if (!configDataSentToArduino[index]){
@@ -1332,13 +1381,13 @@ void MainWindow::setSliderSilent(QSlider *qs, int val){
 
 void MainWindow::on_btnAddGroup_clicked()
 {
-    Group g = {"",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    //TODO make this start at full brightness sat and value
+    Group g = {"",0,0,0,   0,0,0,0,0,255,  0,255,255,0,255,255,  0};
     g.name = "Group " + QString::number(groups.size() + 1);
     groups.append(g);
     showGroups();
     saveGroupsToFile();
     sendGroupInfo(g.name);
-
 }
 
 bool isValidGroupLED(QList<Group> g, QString nameGroupChanging,int led){
@@ -1493,3 +1542,22 @@ void MainWindow::on_btnDeleteGroup_clicked()
     }
 }
 
+void MainWindow::on_sldMasterBrightness(int val){
+    //qDebug() << "Master: " << val;
+
+    if ( abs(config.MB - val) > SLD_CHANGE_THRESHOLD || val > 252 )
+    {
+        config.MB = val;
+        saveConfigToFile();
+        sendArduinoCmd("MB:" + QString::number(val));
+        if (config.mode == MODE_RGB){
+            changeBackgroundOfRGBSlider(ui->sldMasterRGB, 194, 84, 14, config.MB/255.0);
+        } else if (config.mode == MODE_HSV){
+            changeBackgroundOfRGBSlider(ui->sldMasterHSV, 194, 84, 14, config.MB/255.0);
+        } else if (config.mode == MODE_GRADIENT){
+            changeBackgroundOfRGBSlider(ui->sldMasterGradient, 194, 84, 14, config.MB/255.0);
+        }
+
+    }
+
+}

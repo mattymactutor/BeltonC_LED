@@ -41,6 +41,7 @@ struct CONFIG{
     int sh,ss,sv,eh,es,ev;
     int mode;
     int numLEDs;
+    int MB;
 };
 
 
@@ -80,6 +81,7 @@ private:
 
 
 private slots:
+       void on_sldMasterBrightness(int idx);
        void tableComboModeChanged(int idx);
        void tableComboStatusChanged(int idx);
        void on_btnClose_clicked();       

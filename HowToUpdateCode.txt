@@ -1,0 +1,17 @@
+Update Code: 
+
+Open the terminal
+
+sudo rm -r BeltonC_LED
+git clone https://github.com/mattymactutor/BeltonC_LED
+
+First update arduino code:
+Click folder icon, go into BeltonC_LED, go into LEDController_v2_groups
+double click that arduino file and upload it.
+
+Go back to terminal
+
+cd BeltonC_LED
+qmake -o Makefile BeltonC_LEDController.pro
+make
+./BeltonC_LEDController

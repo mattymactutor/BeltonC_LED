@@ -64,7 +64,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <property name="iconSize">
       <size>
@@ -98,7 +98,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
          <height>301</height>
         </rect>
@@ -129,7 +129,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>120</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
          <height>301</height>
         </rect>
@@ -161,7 +161,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>230</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
          <height>301</height>
         </rect>
@@ -195,7 +195,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>340</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
          <height>301</height>
         </rect>
@@ -226,7 +226,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>450</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
          <height>301</height>
         </rect>
@@ -258,7 +258,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>560</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
          <height>301</height>
         </rect>
@@ -288,7 +288,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
          <height>321</height>
         </rect>
@@ -307,7 +307,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
          <height>321</height>
         </rect>
@@ -329,7 +329,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>220</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
          <height>321</height>
         </rect>
@@ -348,7 +348,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
          <height>321</height>
         </rect>
@@ -367,7 +367,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
          <height>321</height>
         </rect>
@@ -389,7 +389,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>550</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
          <height>321</height>
         </rect>
@@ -408,7 +408,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>490</x>
-         <y>10</y>
+         <y>20</y>
          <width>141</width>
          <height>25</height>
         </rect>
@@ -421,6 +421,212 @@ QSlider::handle:vertical {
 }</string>
        </property>
       </widget>
+      <widget class="QSlider" name="sldMasterRGB">
+       <property name="geometry">
+        <rect>
+         <x>700</x>
+         <y>90</y>
+         <width>60</width>
+         <height>301</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QSlider::groove:vertical {
+    width: 80px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgb(255, 255, 255), stop:1 rgb(194, 84, 14));
+    margin: 2px 0;
+}
+
+QSlider::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
+    height: 25px;
+    margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+    border-radius: 8px;
+}</string>
+       </property>
+       <property name="maximum">
+        <number>255</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+      <widget class="QFrame" name="brdMasterRGB">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>80</y>
+         <width>80</width>
+         <height>321</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background:rgb(255,255,255)</string>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblMaster">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>20</y>
+         <width>80</width>
+         <height>60</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Master Fade</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblRed">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Red</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblGreen">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Green</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblBlue">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Blue</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblDaylight">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Daylight</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblTungsten">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Tungsten</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblBrightness">
+       <property name="geometry">
+        <rect>
+         <x>550</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Brightness</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <zorder>lblRed</zorder>
+      <zorder>lblGreen</zorder>
+      <zorder>lblBlue</zorder>
+      <zorder>lblDaylight</zorder>
+      <zorder>lblTungsten</zorder>
+      <zorder>brdMasterRGB</zorder>
       <zorder>brdBrightness</zorder>
       <zorder>brdDaylight</zorder>
       <zorder>brdTungsten</zorder>
@@ -434,6 +640,9 @@ QSlider::handle:vertical {
       <zorder>sldDaylight</zorder>
       <zorder>sldBrightness</zorder>
       <zorder>cmbRGB_Groups</zorder>
+      <zorder>sldMasterRGB</zorder>
+      <zorder>lblMaster</zorder>
+      <zorder>lblBrightness</zorder>
      </widget>
      <widget class="QWidget" name="tabHSV">
       <attribute name="title">
@@ -442,8 +651,8 @@ QSlider::handle:vertical {
       <widget class="QSlider" name="sldHue">
        <property name="geometry">
         <rect>
-         <x>109</x>
-         <y>60</y>
+         <x>80</x>
+         <y>100</y>
          <width>61</width>
          <height>281</height>
         </rect>
@@ -476,8 +685,8 @@ QSlider::handle:vertical {
       <widget class="QSlider" name="sldSat">
        <property name="geometry">
         <rect>
-         <x>289</x>
-         <y>60</y>
+         <x>300</x>
+         <y>100</y>
          <width>61</width>
          <height>281</height>
         </rect>
@@ -511,8 +720,8 @@ QSlider::handle:vertical {
       <widget class="QSlider" name="sldVal">
        <property name="geometry">
         <rect>
-         <x>469</x>
-         <y>60</y>
+         <x>520</x>
+         <y>100</y>
          <width>61</width>
          <height>281</height>
         </rect>
@@ -546,8 +755,8 @@ QSlider::handle:vertical {
       <widget class="QFrame" name="brdSat">
        <property name="geometry">
         <rect>
-         <x>279</x>
-         <y>50</y>
+         <x>290</x>
+         <y>90</y>
          <width>81</width>
          <height>301</height>
         </rect>
@@ -565,8 +774,8 @@ QSlider::handle:vertical {
       <widget class="QFrame" name="brdHue">
        <property name="geometry">
         <rect>
-         <x>99</x>
-         <y>50</y>
+         <x>70</x>
+         <y>90</y>
          <width>81</width>
          <height>301</height>
         </rect>
@@ -584,8 +793,8 @@ QSlider::handle:vertical {
       <widget class="QFrame" name="brdVal">
        <property name="geometry">
         <rect>
-         <x>459</x>
-         <y>50</y>
+         <x>510</x>
+         <y>90</y>
          <width>81</width>
          <height>301</height>
         </rect>
@@ -606,16 +815,16 @@ QSlider::handle:vertical {
        </property>
        <property name="geometry">
         <rect>
-         <x>110</x>
-         <y>360</y>
-         <width>61</width>
+         <x>70</x>
+         <y>60</y>
+         <width>81</width>
          <height>31</height>
         </rect>
        </property>
        <property name="font">
         <font>
-         <pointsize>25</pointsize>
-         <bold>true</bold>
+         <pointsize>12</pointsize>
+         <bold>false</bold>
         </font>
        </property>
        <property name="styleSheet">
@@ -632,16 +841,16 @@ color: black;</string>
       <widget class="QLabel" name="lblSat">
        <property name="geometry">
         <rect>
-         <x>289</x>
-         <y>360</y>
-         <width>61</width>
+         <x>290</x>
+         <y>60</y>
+         <width>81</width>
          <height>31</height>
         </rect>
        </property>
        <property name="font">
         <font>
-         <pointsize>25</pointsize>
-         <bold>true</bold>
+         <pointsize>12</pointsize>
+         <bold>false</bold>
         </font>
        </property>
        <property name="styleSheet">
@@ -658,16 +867,16 @@ color: black;</string>
       <widget class="QLabel" name="lblVal">
        <property name="geometry">
         <rect>
-         <x>469</x>
-         <y>360</y>
-         <width>61</width>
+         <x>510</x>
+         <y>60</y>
+         <width>81</width>
          <height>31</height>
         </rect>
        </property>
        <property name="font">
         <font>
-         <pointsize>25</pointsize>
-         <bold>true</bold>
+         <pointsize>12</pointsize>
+         <bold>false</bold>
         </font>
        </property>
        <property name="styleSheet">
@@ -684,8 +893,8 @@ color: black;</string>
       <widget class="QComboBox" name="cmbHSV_Groups">
        <property name="geometry">
         <rect>
-         <x>480</x>
-         <y>10</y>
+         <x>490</x>
+         <y>20</y>
          <width>141</width>
          <height>25</height>
         </rect>
@@ -698,6 +907,81 @@ color: black;</string>
 }</string>
        </property>
       </widget>
+      <widget class="QLabel" name="lblMaster_2">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>20</y>
+         <width>80</width>
+         <height>60</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Master Fade</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QSlider" name="sldMasterHSV">
+       <property name="geometry">
+        <rect>
+         <x>700</x>
+         <y>90</y>
+         <width>60</width>
+         <height>301</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QSlider::groove:vertical {
+    width: 80px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgb(255, 255, 255), stop:1 rgb(194, 84, 14));
+    margin: 2px 0;
+}
+
+QSlider::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
+    height: 25px;
+    margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+    border-radius: 8px;
+}</string>
+       </property>
+       <property name="maximum">
+        <number>255</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+      <widget class="QFrame" name="brdMasterHSV">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>80</y>
+         <width>80</width>
+         <height>321</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background:rgb(255,255,255)</string>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+      <zorder>brdMasterHSV</zorder>
       <zorder>brdVal</zorder>
       <zorder>brdSat</zorder>
       <zorder>brdHue</zorder>
@@ -708,6 +992,8 @@ color: black;</string>
       <zorder>lblSat</zorder>
       <zorder>lblVal</zorder>
       <zorder>cmbHSV_Groups</zorder>
+      <zorder>lblMaster_2</zorder>
+      <zorder>sldMasterHSV</zorder>
      </widget>
      <widget class="QWidget" name="tabGradient">
       <attribute name="title">
@@ -717,9 +1003,9 @@ color: black;</string>
        <property name="geometry">
         <rect>
          <x>230</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
-         <height>281</height>
+         <height>271</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -749,9 +1035,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
-         <height>301</height>
+         <height>291</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -768,9 +1054,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
-         <height>301</height>
+         <height>291</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -787,9 +1073,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>450</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
-         <height>281</height>
+         <height>271</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -819,9 +1105,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
-         <height>301</height>
+         <height>291</height>
         </rect>
        </property>
        <property name="autoFillBackground">
@@ -841,9 +1127,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
-         <height>301</height>
+         <height>291</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -860,9 +1146,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
-         <height>281</height>
+         <height>271</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -891,9 +1177,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>560</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
-         <height>281</height>
+         <height>271</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -921,9 +1207,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>120</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
-         <height>281</height>
+         <height>271</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -953,9 +1239,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>340</x>
-         <y>70</y>
+         <y>90</y>
          <width>60</width>
-         <height>281</height>
+         <height>271</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -984,9 +1270,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>550</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
-         <height>301</height>
+         <height>291</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -1003,9 +1289,9 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>220</x>
-         <y>60</y>
+         <y>80</y>
          <width>80</width>
-         <height>301</height>
+         <height>291</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -1022,7 +1308,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>370</y>
+         <y>380</y>
          <width>631</width>
          <height>21</height>
         </rect>
@@ -1041,7 +1327,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>490</x>
-         <y>10</y>
+         <y>20</y>
          <width>141</width>
          <height>25</height>
         </rect>
@@ -1054,6 +1340,207 @@ QSlider::handle:vertical {
 }</string>
        </property>
       </widget>
+      <widget class="QLabel" name="lblStartHue_2">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Start Hue</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblEndSat_2">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>End Sat</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblEndVal_2">
+       <property name="geometry">
+        <rect>
+         <x>550</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>End Val</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblStartVal_2">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Start Val</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblEndHue_2">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>End Hue</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblStartSat_2">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>60</y>
+         <width>81</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Start Sat</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblMaster_3">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>20</y>
+         <width>80</width>
+         <height>60</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Master Fade&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QSlider" name="sldMasterGradient">
+       <property name="geometry">
+        <rect>
+         <x>700</x>
+         <y>90</y>
+         <width>60</width>
+         <height>301</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QSlider::groove:vertical {
+    width: 80px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgb(255, 255, 255), stop:1 rgb(194, 84, 14));
+    margin: 2px 0;
+}
+
+QSlider::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
+    height: 25px;
+    margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+    border-radius: 8px;
+}</string>
+       </property>
+       <property name="maximum">
+        <number>255</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+      <widget class="QFrame" name="brdMasterGradient">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>80</y>
+         <width>80</width>
+         <height>321</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background:rgb(255,255,255)</string>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+      <zorder>brdMasterGradient</zorder>
       <zorder>brdEndVal</zorder>
       <zorder>brdStartSat</zorder>
       <zorder>brdEndHue</zorder>
@@ -1068,6 +1555,14 @@ QSlider::handle:vertical {
       <zorder>sldEndVal</zorder>
       <zorder>frameGradient</zorder>
       <zorder>cmbGradient_Groups</zorder>
+      <zorder>lblStartHue_2</zorder>
+      <zorder>lblEndSat_2</zorder>
+      <zorder>lblEndVal_2</zorder>
+      <zorder>lblStartVal_2</zorder>
+      <zorder>lblEndHue_2</zorder>
+      <zorder>lblStartSat_2</zorder>
+      <zorder>lblMaster_3</zorder>
+      <zorder>sldMasterGradient</zorder>
      </widget>
      <widget class="QWidget" name="tabGroups">
       <attribute name="title">
@@ -1125,7 +1620,7 @@ QSlider::handle:vertical {
     <property name="geometry">
      <rect>
       <x>680</x>
-      <y>0</y>
+      <y>5</y>
       <width>93</width>
       <height>29</height>
      </rect>
@@ -1138,7 +1633,7 @@ QSlider::handle:vertical {
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>0</y>
+      <y>5</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -1156,7 +1651,7 @@ QSlider::handle:vertical {
     <property name="geometry">
      <rect>
       <x>530</x>
-      <y>0</y>
+      <y>5</y>
       <width>104</width>
       <height>31</height>
      </rect>
