@@ -1,7 +1,7 @@
 import os
 import time
 
-os.system("cd")
+os.system("cd ..")
 os.system("sudo rm -r BeltonC_LED")
 os.system("git clone https://github.com/mattymactutor/BeltonC_LED")
 time.sleep(2)
