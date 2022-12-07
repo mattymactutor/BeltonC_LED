@@ -64,7 +64,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="iconSize">
       <size>
@@ -1572,7 +1572,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>40</y>
+         <y>50</y>
          <width>621</width>
          <height>331</height>
         </rect>
@@ -1591,7 +1591,7 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>668</x>
-         <y>40</y>
+         <y>50</y>
          <width>101</width>
          <height>25</height>
         </rect>
@@ -1604,13 +1604,48 @@ QSlider::handle:vertical {
        <property name="geometry">
         <rect>
          <x>668</x>
-         <y>80</y>
+         <y>90</y>
          <width>101</width>
          <height>25</height>
         </rect>
        </property>
        <property name="text">
         <string>Delete Group</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="lblStripType">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>10</y>
+         <width>101</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>13</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Strip Type:</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="cmbStripType">
+       <property name="geometry">
+        <rect>
+         <x>490</x>
+         <y>10</y>
+         <width>141</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QComboBox QAbstractItemView {
+
+    selection-background-color: rgb(0,0,127);
+    selection-color: rgb(0, 0, 0);
+}</string>
        </property>
       </widget>
      </widget>

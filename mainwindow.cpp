@@ -61,7 +61,7 @@ CONFIG config;
 //save individual group info
 QList<Group> groups;
 //use models for the group dropdown boxes
-QStringList groupsRGB, groupsHSV, groupsGradient;
+QStringList groupsRGB, groupsHSV, groupsGradient, stripTypes;
 
 QList<QList<QFrame*>> borders;
 QList<QList<QSlider*>> sliders;
@@ -367,7 +367,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui2 = ui;
-
     //mark that no page data has been sent to arduino yet
     for(int i = 0 ; i < NUM_MODES; i++){
         configDataSentToArduino[i] = false;
@@ -383,6 +382,14 @@ MainWindow::MainWindow(QWidget *parent)
         arduino->sendMsg("init");
         //usleep(500*1000);
     }
+
+
+    //LOAD CONFIG TRIES TO CHANGE THE DROPDOWN SO POPULATE THIS FIRST
+    //setup the strips dropdown
+    stripTypes.append("WS2812B");
+    stripTypes.append("APA102");
+    stripTypes.append("NEOPIXEL SKINNY");
+    ui->cmbStripType->setModel( new QStringListModel(stripTypes) );
 
     loadConfigFromFile();
 
@@ -440,8 +447,7 @@ MainWindow::MainWindow(QWidget *parent)
     //during testing it would open on tab 3 but the Arduino would not be in that mode because we didnt click and send the message
     //set it to be the first tab that way you have to click to go to another tab with actually sends the mode number
     ui->tabWidget->setCurrentIndex(static_cast<int>(config.mode));
-    arduino->sendMsg("m:" + to_string(static_cast<int>(config.mode)));
-    sendInitData(config.mode);
+
 
 
     //You should only show groups that have been flagged with this type,
@@ -462,55 +468,94 @@ MainWindow::MainWindow(QWidget *parent)
     //show the groups in the table on the groups page
     showGroups();
 
-
-    //send the group info to the arduino
-    for(int i = 0; i < groups.size(); i++){
-        sendGroupInfo(groups[i].name);
-        usleep(20*1000);
-    }
-
-
     //connect all of the master sliders to the function
     connect(ui->sldMasterRGB, &QSlider::valueChanged, this, &MainWindow::on_sldMasterBrightness);
     connect(ui->sldMasterHSV, &QSlider::valueChanged, this, &MainWindow::on_sldMasterBrightness);
     connect(ui->sldMasterGradient, &QSlider::valueChanged, this, &MainWindow::on_sldMasterBrightness);
 
+    sendStartUpData(true); //send true for first load
+
+
 }
 
-void MainWindow::sendInitData(int idx){
+void MainWindow::load(){
+
+
+}
+
+void MainWindow::sendStartUpData(bool firstLoad){
+
+    //connect
+    while(!arduino->isConnected()){
+        arduino->sendMsg("init");
+        //usleep(500*1000);
+    }
+    //send number of LEDS
+    sendArduinoCmd("nl:" + QString::number(config.numLEDs));
+    usleep(100*1000);
+
+    //send current mode data
+    //when you change the strip on the groups tabs it will have the groups as the mode which doesnt send any data
+    //if this is not the first load we should send the RGB mode info by default
+    if (firstLoad){
+        //send current tab that we're on
+       // sendArduinoCmd("m:" + QString::number(static_cast<int>(config.mode)));
+
+        //if we're on the groups page send the RGB data
+        if (config.mode == MODE_GROUPS){
+            sendModeData(MODE_RGB);
+        } else {
+            sendModeData(config.mode);
+        }
+    } else {
+        //send current tab that we're on
+        //sendArduinoCmd("m:" + QString::number(MODE_RGB));
+        sendModeData(MODE_RGB);
+    }
+     usleep(100*1000);
+    //send the group info to the arduino
+    for(int i = 0; i < groups.size(); i++){
+        sendGroupInfo(groups[i].name);
+        usleep(50*1000);
+    }
+
+
+
+}
+
+void MainWindow::sendModeData(int idx){
 
     if (idx == MODE_RGB){
-    //rgb
-   /* sendArduinoCmd("r:" + QString::number(config.r));
-    sendArduinoCmd("g:" + QString::number(config.g));
-    sendArduinoCmd("b:" + QString::number(config.b));
-    sendArduinoCmd("d:" + QString::number(config.d));
-    sendArduinoCmd("t:" + QString::number(config.t));
-    sendArduinoCmd("B:" + QString::number(config.B));*/
-    QString msg = "l0{";
-    appendNum(msg, config.r);
-    appendNum(msg,config.g);
-    appendNum(msg,config.b);
-    appendNum(msg,config.d);
-    appendNum(msg,config.t);
-    appendNum(msg,config.B);
-    msg += "}";
-    sendArduinoCmd(msg);
-    loadSliders();
-    highlightSlider(0);
-
+        //rgb
+       /* sendArduinoCmd("r:" + QString::number(config.r));
+        sendArduinoCmd("g:" + QString::number(config.g));
+        sendArduinoCmd("b:" + QString::number(config.b));
+        sendArduinoCmd("d:" + QString::number(config.d));
+        sendArduinoCmd("t:" + QString::number(config.t));
+        sendArduinoCmd("B:" + QString::number(config.B));*/
+        QString msg = "l0{";
+        appendNum(msg, config.r);
+        appendNum(msg,config.g);
+        appendNum(msg,config.b);
+        appendNum(msg,config.d);
+        appendNum(msg,config.t);
+        appendNum(msg,config.B);
+        msg += "}";
+        sendArduinoCmd(msg);
+        loadSliders();
+        highlightSlider(0);
     } else if (idx == MODE_HSV){
         //THIS SHOULD BE CONVERTED FOR THE SINGLE MESSAGE TO LOAD BUT HOLD OFF BECAUSE IT MIGHT CHANGE TO JUST BYTES ANYWAY
         //AND NOW THAT THERE"S ACK THIS SEEMS TO BE WORKING BETTER
-    //hsv
-    QString msg = "l1{";
-    appendNum(msg, config.h);
-    appendNum(msg,config.s);
-    appendNum(msg,config.v);
-    msg += "}";
-    sendArduinoCmd(msg);
-    loadSliders();
-    highlightSlider(0);
+        //hsv
+        QString msg = "l1{";
+        appendNum(msg, config.h);
+        appendNum(msg,config.s);
+        appendNum(msg,config.v);
+        msg += "}";
+        sendArduinoCmd(msg);
+        loadSliders();
+        highlightSlider(0);
     } else if (idx == MODE_GRADIENT){
         //gradient
         QString msg = "l2{";
@@ -1108,7 +1153,10 @@ void MainWindow::saveConfigToFile(){
     //last line is the mode
     outfile << static_cast<int>(config.mode) << endl;
     outfile << config.numLEDs << endl;
+    //save master brightness
     outfile << config.MB << endl;
+    //save strip type
+    outfile << config.stripType << endl;
 
     outfile.close();
 }
@@ -1125,6 +1173,7 @@ void MainWindow::loadConfigFromFile(){
         newConf.mode = 0;
         newConf.numLEDs = 10;//just show something, if it's 0 it seems like it's not working
         newConf.MB = 255;
+        newConf.stripType = 0;
         config = newConf;
         saveConfigToFile();
     }
@@ -1139,6 +1188,7 @@ void MainWindow::loadConfigFromFile(){
     infile >> config.mode ;
     infile >> config.numLEDs;
     infile >> config.MB;
+    infile >> config.stripType;
     infile.close();
 
     cout << "---Loaded config settings---" << endl;
@@ -1150,12 +1200,13 @@ void MainWindow::loadConfigFromFile(){
     cout << "\tEND  --> H,S,V:\t" << config.eh << " "  << config.es  << " "  << config.ev << endl;
     cout << "MODE: " << config.mode << endl;
     cout << "Master Brightness: " << config.MB << endl;
+    cout << "Strip Type: " << config.stripType << endl;
 
     //set the num leds
     ui->edtNumLeds->blockSignals(true);
     ui->edtNumLeds->setPlainText( QString::number(config.numLEDs));
     ui->edtNumLeds->blockSignals(false);
-    sendArduinoCmd("nl:" + QString::number(config.numLEDs));
+    //sendArduinoCmd("nl:" + QString::number(config.numLEDs));
 
     ui->sldMasterRGB->blockSignals(true);
     ui->sldMasterRGB->setValue(config.MB);
@@ -1172,6 +1223,13 @@ void MainWindow::loadConfigFromFile(){
     ui->sldMasterGradient->blockSignals(false);
     changeBackgroundOfRGBSlider(ui->sldMasterGradient, 194, 84, 14, config.MB/255.0);
 
+    //set the strip combo to match
+    ui->cmbStripType->blockSignals(true);
+    ui->cmbStripType->setCurrentIndex(config.stripType);
+    ui->cmbStripType->blockSignals(false);
+
+    //the arduino should have the same strip saved as the config file so dont resend
+    //sendArduinoCmd("st:" + QString::number(config.stripType));
 }
 
 void MainWindow::loadGroupsFromFile(){
@@ -1240,9 +1298,6 @@ void MainWindow::saveGroupsToFile(){
     }
     outfile.close();
 
-
-
-
 }
 
 void MainWindow::on_tabWidget_tabBarClicked(int index)
@@ -1270,7 +1325,7 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
     saveConfigToFile();
 
     QString msg = "m:" + QString::number(index);
-    sendArduinoCmd(msg);
+    //sendArduinoCmd(msg); HERE
 
     //load the master slider on the page that just got activated
     if (config.mode == MODE_RGB){
@@ -1290,7 +1345,7 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
 
 
     //if (!configDataSentToArduino[index]){
-    sendInitData(config.mode);
+    sendModeData(config.mode);
     //}
 }
 
@@ -1561,3 +1616,34 @@ void MainWindow::on_sldMasterBrightness(int val){
     }
 
 }
+
+void MainWindow::on_cmbStripType_currentIndexChanged(int index)
+{
+
+}
+
+//this should only fire when the user actually interacts with it
+//not an index being set
+void MainWindow::on_cmbStripType_activated(int index)
+{
+    config.stripType = index;
+    saveConfigToFile();
+    //send the change to arduino and reset it
+    sendArduinoCmd("st:" + QString::number(index));
+    //the reset happens from the st command in arduino
+    //sendArduinoCmd("RESET");
+    usleep(1000*1000); //wait 1 second for the reset
+
+    //close serial communication
+    arduino->close();
+    //wait for it to connect again
+    while (!arduino->isOpen()){
+        arduino->reconnect();
+    }
+    usleep(2000*1000); //need this two second delay on startup to connected
+
+    //after it resets see if it will reconnect
+    //then resend the initial data
+    sendStartUpData(false);
+}
+

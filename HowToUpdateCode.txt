@@ -6,7 +6,7 @@ sudo rm -r BeltonC_LED
 git clone https://github.com/mattymactutor/BeltonC_LED
 
 First update arduino code:
-Click folder icon, go into BeltonC_LED, go into LEDController_v3_multipleLEDStrips
+Click folder icon, go into BeltonC_LED, go into LEDController_v2_groups
 double click that arduino file and upload it.
 
 Go back to terminal

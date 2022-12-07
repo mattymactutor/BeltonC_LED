@@ -21,7 +21,7 @@ class USB_Comm{
 private:
 	 // Instantiate a SerialPort object.
     SerialPort serial_port;
-    bool isOpen = false, isConnected_ = false;
+    bool isOpen_ = false, isConnected_ = false;
     string inMsg,port;
     bool waitingFroResponse = false;
     thread * thListen = nullptr;
@@ -35,8 +35,8 @@ public:
 	USB_Comm(string port){
 		inMsg = "";
 		this->port = port;
-		isOpen = false;
-		while (!isOpen){
+        isOpen_ = false;
+        while (!isOpen_){
 			//cout << "!!PUT TEENSY RETRY BACK IN!!" << endl;
 			reconnect();
         }
@@ -96,7 +96,7 @@ public:
 			{
 				// Open the Serial Port at the desired hardware port.
 				serial_port.Open(port.c_str()) ;
-				isOpen = true;
+                isOpen_ = true;
 				
 					// Set the baud rate of the serial port.
 				serial_port.SetBaudRate(BaudRate::BAUD_115200) ;
@@ -123,13 +123,13 @@ public:
 			catch (const OpenFailed&)
 			{
                 std::cerr << "NOT CONNECTED TO ARDUINO..trying on " << port << std::endl ;
-				isOpen = false;
+                isOpen_ = false;
                 usleep(500*1000);
 				return false;
 				
 			} catch(LibSerial::NotOpen const &){
                 std::cerr << "NOT CONNECTED TO ARDUINO..trying on " << port << std::endl ;
-				isOpen = false;
+                isOpen_ = false;
                 usleep(500*1000);
 				return false;
 			}
@@ -199,9 +199,14 @@ public:
 	}
 	
 	void close(){
+        isConnected_ = false;
+        isOpen_ = false;
 		serial_port.Close();
 	}
 	
+    bool isOpen(){
+        return isOpen_;
+    }
 	bool isClosed(){
 		//cout << "isClosed()" << endl;
 	
@@ -281,6 +286,7 @@ public:
 			
 		}
 		} catch (LibSerial::NotOpen const &){
+            isConnected_ = false;
 			cout << "USB disconnected while listening" << endl;
 			
 		}

@@ -42,6 +42,7 @@ struct CONFIG{
     int mode;
     int numLEDs;
     int MB;
+    int stripType;
 };
 
 
@@ -53,6 +54,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void load();
     //int curHighlight = 0, curSelection = -1;
     //void highlightSlider(int sld);
     //void selectSlider(int sld);
@@ -64,7 +66,8 @@ private:
     void saveConfigToFile();
     void loadGroupsFromFile();
     void saveGroupsToFile();
-    void sendInitData(int idx);
+    void sendModeData(int idx);
+    void sendStartUpData(bool firstLoad);
     void sendArduinoCmd(QString in);
     void sendGroupInfo(QString name);
     void loadSliders();
@@ -108,5 +111,7 @@ private slots:
        void on_cmbGradient_Groups_currentIndexChanged(int index);
        void on_edtNumLeds_textChanged();
        void on_btnDeleteGroup_clicked();
+       void on_cmbStripType_currentIndexChanged(int index);
+       void on_cmbStripType_activated(int index);
 };
 #endif // MAINWINDOW_H
