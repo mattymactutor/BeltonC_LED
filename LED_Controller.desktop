@@ -1,6 +1,0 @@
-[Desktop Entry]
-Name=Run LED Controller
-Comment=This code will run the LED Controller
-Exec=./BeltonC_LED/BeltonC_LEDController
-Type=Application
-Terminal=true
